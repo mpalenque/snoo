@@ -334,6 +334,9 @@
 
 			// Function to test if a file exists
 			function fileExists(url) {
+				// Asegurarse de que la URL está en minúsculas
+				url = url.toLowerCase();
+				
 				return new Promise((resolve, reject) => {
 					const xhr = new XMLHttpRequest();
 					xhr.open('HEAD', url, true);
@@ -355,6 +358,9 @@
 
 			// Function to get correct asset path with base path and fallbacks
 			async function getAssetPath(relativePath) {
+				 // Forzar minúsculas en el path
+				relativePath = relativePath.toLowerCase();
+				
 				// Remove any leading './' from the relativePath if present
 				if (relativePath.startsWith('./')) {
 					relativePath = relativePath.substring(2);
@@ -363,8 +369,8 @@
 				// Try both with and without "models/" prefix for VRM files
 				if (relativePath.endsWith('.vrm') && !relativePath.includes('/')) {
 					// Check if file exists in root
-					const rootPath = BASE_PATH + relativePath;
-					const modelsDirPath = BASE_PATH + 'models/' + relativePath;
+					const rootPath = (BASE_PATH + relativePath).toLowerCase();
+					const modelsDirPath = (BASE_PATH + 'models/' + relativePath).toLowerCase();
 					
 					console.log(`Checking if VRM exists at: ${rootPath}`);
 					const rootExists = await fileExists(rootPath);
@@ -407,12 +413,15 @@
 					return BASE_PATH + relativePath;
 				}
 				
-				// For non-VRM files, just return with BASE_PATH
-				return BASE_PATH + relativePath;
+				 // Para archivos no-VRM, también usar minúsculas
+				return (BASE_PATH + relativePath).toLowerCase();
 			}
 
 			// Function to load and apply a texture to a material
 			function loadAndApplyTexture(texturePath, material) {
+				// Normalizar la ruta a minúsculas
+				texturePath = texturePath.toLowerCase();
+				
 				if (!material) {
 					console.warn(`Material not found for texture: ${texturePath}`);
 					return;
@@ -573,9 +582,9 @@
 			async function loadVRMModel() {
 				// List of possible paths to try for the VRM model
 				const pathsToTry = [
-					'models/Snoo_AppliedVRM_PreFinish.vrm',
 					'models/snoo_appliedvrm_prefinish.vrm',
-					'Snoo_AppliedVRM_PreFinish.vrm',
+					'models/snoo_appliedvrm_prefinish.vrm',
+					'snoo_appliedvrm_prefinish.vrm',
 					'snoo_appliedvrm_prefinish.vrm'
 				];
 				
