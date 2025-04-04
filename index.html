@@ -483,6 +483,105 @@
 				return false;
 			}
 
+			function checkAndHandleSkinTexture(vrm, skinMaterial) {
+				for (let i = 1; i <= 10; i++) {
+					const skinNum = i < 10 ? `0${i}` : `${i}`;
+					const paramName = `skin-${skinNum}`;
+					
+					if (getURLParameter(paramName)) {
+						console.log(`🔄 Applying ${paramName} texture...`);
+						
+						// Try multiple variations of the path
+						const textureNames = [
+							`./textures/skin/skin_${skinNum}.png`.toLowerCase(),
+							`./textures/Skin/Skin_${skinNum}.png`,
+							`./skin/skin_${skinNum}.png`.toLowerCase(),
+							`./textures/skin_${skinNum}.png`.toLowerCase()
+						];
+						
+						if (skinMaterial) {
+							console.log(`Found skin material, trying texture names:`, textureNames);
+							// Set roughness to 1 for skin materials
+							if (skinMaterial.roughness !== undefined) {
+								skinMaterial.roughness = 1.0;
+							}
+							loadAndApplyTexture(textureNames[0], skinMaterial);
+							return true;
+						} else {
+							console.warn("⚠️ No skin material found, looking for alternatives...");
+							// Try to find another material that might work
+							let found = false;
+							vrm.scene.traverse((node) => {
+								if (!found && node.material && node.material.name) {
+									const matName = node.material.name.toLowerCase();
+									if (matName.includes('skin')) {
+										console.log(`Found alternative skin material: ${node.material.name}`);
+										if (node.material.roughness !== undefined) {
+											node.material.roughness = 1.0;
+										}
+										loadAndApplyTexture(textureNames[0], node.material);
+										found = true;
+									}
+								}
+							});
+							return found;
+						}
+					}
+				}
+				return false;
+			}
+
+			function checkAndHandleEyesTexture(vrm, leftEyeMaterial, rightEyeMaterial) {
+				for (let i = 1; i <= 10; i++) {
+					const eyesNum = i < 10 ? `0${i}` : `${i}`;
+					const paramName = `eyes-${eyesNum}`;
+					
+					if (getURLParameter(paramName)) {
+						console.log(`🔄 Applying ${paramName} texture...`);
+						
+						// Try multiple variations of the path
+						const texturePath = `./textures/eyes/eyes_${eyesNum}.png`.toLowerCase();
+						const textureNames = [
+							texturePath,
+							`./textures/Eyes/Eyes_${eyesNum}.png`,
+							`./eyes/eyes_${eyesNum}.png`.toLowerCase(),
+							`./textures/eyes_${eyesNum}.png`.toLowerCase()
+						];
+						
+						let applied = false;
+						
+						if (leftEyeMaterial) {
+							loadAndApplyTexture(textureNames[0], leftEyeMaterial);
+							applied = true;
+						}
+						
+						if (rightEyeMaterial) {
+							loadAndApplyTexture(textureNames[0], rightEyeMaterial);
+							applied = true;
+						}
+						
+						if (!applied) {
+							console.warn("⚠️ No eye materials found, looking for alternatives...");
+							// Try to find other eye materials
+							vrm.scene.traverse((node) => {
+								if (node.material && node.material.name) {
+									const matName = node.material.name.toLowerCase();
+									if ((matName.includes('eye') && (matName.includes('l') || matName.includes('r'))) || 
+										matName.includes('fake eye')) {
+										console.log(`Found alternative eye material: ${node.material.name}`);
+										loadAndApplyTexture(textureNames[0], node.material);
+										applied = true;
+									}
+								}
+							});
+						}
+						
+						return applied;
+					}
+				}
+				return false;
+			}
+
 			// Function to load and apply a texture to a material
 			function loadAndApplyTexture(texturePath, material) {
 				// Normalizar la ruta a minúsculas
