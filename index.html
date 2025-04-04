@@ -923,18 +923,18 @@
 						// Determine if we're on GitHub Pages
 						const isGitHubPages = window.location.hostname === 'mpalenque.github.io';
 						
-						// Array of possible paths to try in order
+						// Array of possible paths to try in order - MODIFIED TO USE UNDERSCORES
 						const pathsToTry = isGitHubPages ? [
-							'/Snoo/models/swing dancing.fbx',
-							'/snoo/models/swing dancing.fbx',
-							'/Snoo/swing dancing.fbx',
-							'/snoo/swing dancing.fbx'
+							'/Snoo/models/swing_dancing.fbx',
+							'/snoo/models/swing_dancing.fbx',
+							'/Snoo/swing_dancing.fbx',
+							'/snoo/swing_dancing.fbx'
 						] : [
-							'models/swing dancing.fbx',
-							'./models/swing dancing.fbx',
-							'../models/swing dancing.fbx',
-							'swing dancing.fbx',
-							'./swing dancing.fbx'
+							'models/swing_dancing.fbx',
+							'./models/swing_dancing.fbx',
+							'../models/swing_dancing.fbx',
+							'swing_dancing.fbx',
+							'./swing_dancing.fbx'
 						];
 
 						console.log('Trying alternative paths:', pathsToTry);
