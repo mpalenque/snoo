@@ -267,14 +267,38 @@
 				return new Promise((resolve) => {
 					const tryLoad = (path) => {
 						console.log(`Trying to load image from: ${path}`);
-						img.onload = () => resolve(true);
-						img.onerror = () => resolve(false);
+						img.onload = () => {
+							console.log(`Successfully loaded image from: ${path}`);
+							resolve(true);
+						};
+						img.onerror = () => {
+							console.warn(`Failed to load image from: ${path}`);
+							resolve(false);
+						};
 						img.src = path;
 					};
 
-					// Try original path first
-					const originalPath = `${basePath}textures/subreddit/${filename}`;
-					tryLoad(originalPath);
+					// Try different path combinations
+					const paths = [
+						`${basePath}textures/subreddit/${filename}`,
+						`${basePath}Textures/subreddit/${filename}`, // Try with capital T
+						`${basePath}textures/Subreddit/${filename}`, // Try with capital S
+						`${basePath}Textures/Subreddit/${filename}`, // Try with both capitals
+					];
+
+					// Try each path in sequence
+					let pathIndex = 0;
+					const tryNextPath = () => {
+						if (pathIndex < paths.length) {
+							tryLoad(paths[pathIndex]);
+							pathIndex++;
+						} else {
+							resolve(false);
+						}
+					};
+
+					img.onerror = tryNextPath;
+					tryNextPath();
 				});
 			}
 
@@ -384,6 +408,34 @@
 			loader.register( ( parser ) => {
 				return new VRMLoaderPlugin( parser );
 			} );
+
+			 // Add the missing updateDebugPanel function before loadVRMModel
+			function updateDebugPanel(vrm) {
+				// If debug panel is hidden, skip the update
+				if (!vrm || document.getElementById('debug-panel').style.display === 'none') return;
+				
+				const materialList = document.getElementById('material-list');
+				materialList.innerHTML = '';
+				const uniqueMaterials = new Map();
+				
+				vrm.scene.traverse((node) => {
+					if (node.material && !uniqueMaterials.has(node.material.uuid)) {
+						uniqueMaterials.set(node.material.uuid, node.material);
+					}
+				});
+				
+				uniqueMaterials.forEach((material) => {
+					const materialInfo = document.createElement('div');
+					materialInfo.className = 'material-info';
+					materialInfo.innerHTML = `
+						<p><strong>Name:</strong> ${material.name || 'unnamed'}</p>
+						<p><strong>Type:</strong> ${material.type}</p>
+						<p><strong>Color:</strong> ${material.color ? '#' + material.color.getHexString() : 'N/A'}</p>
+						<p><strong>Has Texture:</strong> ${material.map ? 'Yes' : 'No'}</p>
+					`;
+					materialList.appendChild(materialInfo);
+				});
+			}
 
 			// Try multiple paths for the VRM model
 			async function loadVRMModel() {
@@ -506,28 +558,44 @@
 
 			// Updated Mixamo animation loading function
 			async function loadSwingDancingAnimation(vrm) {
-				if (!vrm) return;
+				if (!vrm || !vrm.humanoid) return;
 				
-				vrm.humanoid?.resetNormalizedPose();
+				console.log('Starting animation loading...');
+				vrm.humanoid.resetNormalizedPose();
 				currentMixer = new THREE.AnimationMixer(vrm.scene);
 				
+				const fbxLoader = new FBXLoader();
 				const animationPaths = [
-					'swing_dancing.fbx',
-					'models/swing_dancing.fbx',
-					'models/swing dancing.fbx',
-					'swing dancing.fbx'
+					BASE_PATH + 'swing_dancing.fbx',
+					BASE_PATH + 'models/swing_dancing.fbx',
+					BASE_PATH + 'models/swing dancing.fbx',
+					BASE_PATH + 'swing dancing.fbx',
+					// Add variants with capital letters
+					BASE_PATH + 'Models/Swing_Dancing.fbx',
+					BASE_PATH + 'Models/Swing Dancing.fbx'
 				];
 
 				for (const path of animationPaths) {
 					try {
-						const fullPath = BASE_PATH + path;
-						console.log(`Trying to load animation from: ${fullPath}`);
+						console.log(`Attempting to load animation from: ${path}`);
+						const fbx = await new Promise((resolve, reject) => {
+							fbxLoader.load(path, resolve, undefined, reject);
+						});
 						
-						const clip = await loadMixamoAnimation(fullPath, vrm);
-						const action = currentMixer.clipAction(clip);
+						console.log('FBX loaded, processing animation...');
+						const clip = THREE.AnimationClip.findByName(fbx.animations, 'mixamo.com');
+						if (!clip) {
+							console.warn(`No 'mixamo.com' animation found in ${path}`);
+							continue;
+						}
+						
+						console.log('Converting animation for VRM...');
+						const convertedClip = await loadMixamoAnimation(path, vrm);
+						const action = currentMixer.clipAction(convertedClip);
 						action.timeScale = 0.8;
 						action.play();
-						console.log(`Successfully loaded animation from ${fullPath}`);
+						
+						console.log('Animation successfully loaded and playing');
 						return;
 					} catch (error) {
 						console.warn(`Failed to load animation from ${path}:`, error);
