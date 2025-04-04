@@ -278,27 +278,9 @@
 						img.src = path;
 					};
 
-					// Try different path combinations
-					const paths = [
-						`${basePath}textures/subreddit/${filename}`,
-						`${basePath}Textures/subreddit/${filename}`, // Try with capital T
-						`${basePath}textures/Subreddit/${filename}`, // Try with capital S
-						`${basePath}Textures/Subreddit/${filename}`, // Try with both capitals
-					];
-
-					// Try each path in sequence
-					let pathIndex = 0;
-					const tryNextPath = () => {
-						if (pathIndex < paths.length) {
-							tryLoad(paths[pathIndex]);
-							pathIndex++;
-						} else {
-							resolve(false);
-						}
-					};
-
-					img.onerror = tryNextPath;
-					tryNextPath();
+					// Try loading directly from root directory like welcome.png and footer.png
+					const path = `${basePath}${filename}`;
+					tryLoad(path);
 				});
 			}
 
