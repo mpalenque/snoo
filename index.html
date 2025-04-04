@@ -179,7 +179,7 @@
 	<body>
 		<!-- Header with welcome image -->
 		<div class="header">
-			<img src="./welcome.png" alt="Welcome">
+			<img src="./welcome.png" alt="Welcome" id="welcome-img">
 		</div>
 		
 		 <!-- Subreddit grid -->
@@ -214,7 +214,7 @@
 		
 		<!-- Footer with footer image - positioned at bottom -->
 		<div class="footer">
-			<img src="./footer.png" alt="Footer">
+			<img src="./footer.png" alt="Footer" id="footer-img">
 		</div>
 
 		<script type="importmap">
@@ -234,6 +234,40 @@
 			import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 			import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+
+			 // Path detection function for GitHub Pages compatibility
+			function getBasePath() {
+				const hostname = window.location.hostname;
+				
+				// Check if we're on GitHub Pages
+				if (hostname.includes('github.io')) {
+					// Extract the repository name from pathname
+					const pathSegments = window.location.pathname.split('/');
+					// If the path starts with a repo name (typical GitHub Pages structure)
+					if (pathSegments.length > 1 && pathSegments[1] !== '') {
+						console.log(`Detected GitHub Pages deployment, using base path: /${pathSegments[1]}/`);
+						return `/${pathSegments[1]}/`;
+					}
+				}
+				
+				// For local development or root-level GitHub Pages, use relative paths
+				console.log('Using relative paths for local development or root GitHub Pages');
+				return './';
+			}
+			
+			// Get the base path once at load time
+			const BASE_PATH = getBasePath();
+			
+			// Update image sources to use the correct base path
+			document.getElementById('welcome-img').src = BASE_PATH + 'welcome.png';
+			document.getElementById('footer-img').src = BASE_PATH + 'footer.png';
+			
+			// Update all subreddit images
+			document.querySelectorAll('.subreddit-item').forEach(img => {
+				// Extract the relative path after './'
+				const relativePath = img.src.split('./').pop();
+				img.src = BASE_PATH + relativePath;
+			});
 
 			// Updated URL parameter parsing function
 			function getURLParameter(name) {
@@ -259,6 +293,15 @@
 				return false;
 			}
 			
+			// Function to get correct asset path with base path
+			function getAssetPath(relativePath) {
+				// Remove any leading './' from the relativePath if present
+				if (relativePath.startsWith('./')) {
+					relativePath = relativePath.substring(2);
+				}
+				return BASE_PATH + relativePath;
+			}
+			
 			// Function to load and apply a texture to a material
 			function loadAndApplyTexture(texturePath, material) {
 				if (!material) {
@@ -266,13 +309,15 @@
 					return;
 				}
 				
-				console.log(`Attempting to load texture from: ${texturePath}`);
+				// Apply the base path to the texture path
+				const fullTexturePath = getAssetPath(texturePath);
+				console.log(`Attempting to load texture from: ${fullTexturePath}`);
 				
 				const textureLoader = new THREE.TextureLoader();
 				textureLoader.load(
-					texturePath,
+					fullTexturePath,
 					(texture) => {
-						console.log(`Successfully loaded texture from ${texturePath}`);
+						console.log(`Successfully loaded texture from ${fullTexturePath}`);
 						
 						// Basic texture settings
 						texture.flipY = false;
@@ -293,7 +338,7 @@
 					},
 					undefined,
 					(error) => {
-						console.error(`Error loading texture ${texturePath}:`, error);
+						console.error(`Error loading texture ${fullTexturePath}:`, error);
 					}
 				);
 			}
@@ -310,7 +355,7 @@
 						console.log(`🔄 Applying ${paramName} texture...`);
 						
 						// Create the correct path format for the texture
-						const texturePath = `./textures/hoodie/hoodie_${hoodieNum}.png`;
+						const texturePath = `textures/hoodie/hoodie_${hoodieNum}.png`;
 						
 						if (hoodieMaterial) {
 							loadAndApplyTexture(texturePath, hoodieMaterial);
@@ -358,7 +403,7 @@
 					
 					if (window.location.href.includes(paramName)) {
 						console.log(`🔍 Found ${paramName} parameter using alternative check`);
-						const texturePath = `./textures/hoodie/hoodie_${hoodieNum}.png`;
+						const texturePath = `textures/hoodie/hoodie_${hoodieNum}.png`;
 						
 						if (hoodieMaterial) {
 							loadAndApplyTexture(texturePath, hoodieMaterial);
@@ -389,7 +434,7 @@
 					if (getURLParameter(paramName)) {
 						console.log(`🔄 Applying ${paramName} texture...`);
 						// Create the correct path format for the texture
-						const texturePath = `./textures/skin/skin_${skinNum}.png`;
+						const texturePath = `textures/skin/skin_${skinNum}.png`;
 						
 						if (skinMaterial) {
 							// For skin materials, set roughness to 1.0 as required
@@ -430,7 +475,7 @@
 				// Also check for skin-06 special case with alternative URL contains method
 				if (window.location.href.includes('skin-06')) {
 					console.log(`🔍 Found skin-06 parameter using alternative check`);
-					const texturePath = `./textures/skin/skin_06.png`;
+					const texturePath = `textures/skin/skin_06.png`;
 					
 					if (skinMaterial) {
 						// Set roughness
@@ -470,7 +515,7 @@
 					if (getURLParameter(paramName)) {
 						console.log(`🔄 Applying ${paramName} texture...`);
 						// Create the correct path format for the texture
-						const texturePath = `./textures/eyes/eyes_${eyesNum}.png`;
+						const texturePath = `textures/eyes/eyes_${eyesNum}.png`;
 						
 						let textureApplied = false;
 						
@@ -515,7 +560,7 @@
 				// Also check for eyes-02 special case with alternative URL contains method
 				if (window.location.href.includes('eyes-02')) {
 					console.log(`🔍 Found eyes-02 parameter using alternative check`);
-					const texturePath = `./textures/eyes/eyes_02.png`;
+					const texturePath = `textures/eyes/eyes_02.png`;
 					let textureApplied = false;
 					
 					if (leftEyeMaterial) {
@@ -857,7 +902,7 @@
 			}
 
 			loader.load(
-				'./models/Snoo_AppliedVRM_PreFinish.vrm',
+				getAssetPath('models/Snoo_AppliedVRM_PreFinish.vrm'),
 				( gltf ) => {
 					const vrm = gltf.userData.vrm;
 					
@@ -974,7 +1019,7 @@
 						hoodieMaterial.needsUpdate = true;
 					}
 					
-					// Check for interest texture - this remains unchanged as it was working before
+					// Check for interest texture - updated path
 					if (getURLParameter('interest-02')) {
 						console.log("🔄 Looking for material for interest-02 texture...");
 						vrm.scene.traverse((node) => {
@@ -982,7 +1027,7 @@
 								(node.material.name.toLowerCase().includes('interest') || 
 								 node.material.name.toLowerCase().includes('badge'))) {
 								console.log("✅ Found potential interest material:", node.material.name);
-								loadAndApplyTexture('./textures/interest/interest_02.png', node.material);
+								loadAndApplyTexture('textures/interest/interest_02.png', node.material);
 							}
 						});
 					}
@@ -1041,9 +1086,9 @@
 				// Create AnimationMixer for VRM
 				currentMixer = new THREE.AnimationMixer(vrm.scene);
 				
-				 // Try direct approach first (the one that works in animations.html)
+				 // Try direct approach first with correct path
 				console.log('Trying direct animation loading approach...');
-				loadMixamoAnimation('./swing_dancing.fbx', vrm)
+				loadMixamoAnimation(getAssetPath('swing_dancing.fbx'), vrm)
 					.then((clip) => {
 						const action = currentMixer.clipAction(clip);
 						action.timeScale = 0.8; // Adjusted to be slightly faster than before
@@ -1055,22 +1100,18 @@
 						console.log('Falling back to alternative paths...');
 						
 						// If direct approach fails, fall back to trying multiple paths
-						// Determine if we're on GitHub Pages
-						const isGitHubPages = window.location.hostname === 'mpalenque.github.io';
-						
-						// Array of possible paths to try in order
-						const pathsToTry = isGitHubPages ? [
-							'/Snoo/models/swing dancing.fbx',
-							'/snoo/models/swing dancing.fbx',
-							'/Snoo/swing dancing.fbx',
-							'/snoo/swing dancing.fbx'
-						] : [
-							// Local development paths - note the spaces instead of underscores
+						// Create paths both with and without the BASE_PATH
+						const pathsToTry = [
+							// With BASE_PATH
+							getAssetPath('models/swing_dancing.fbx'),
+							getAssetPath('models/swing dancing.fbx'),
+							getAssetPath('swing_dancing.fbx'),
+							getAssetPath('swing dancing.fbx'),
+							// Without BASE_PATH as last resort
+							'models/swing_dancing.fbx',
 							'models/swing dancing.fbx',
-							'./models/swing dancing.fbx',
-							'../models/swing dancing.fbx',
-							'swing dancing.fbx',
-							'./swing dancing.fbx'
+							'swing_dancing.fbx',
+							'swing dancing.fbx'
 						];
 
 						console.log('Trying alternative paths:', pathsToTry);
