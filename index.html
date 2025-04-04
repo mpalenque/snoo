@@ -182,23 +182,23 @@
 			<img src="./welcome.png" alt="Welcome" id="welcome-img">
 		</div>
 		
-		 <!-- Subreddit grid -->
+		 <!-- Subreddit grid with corrected paths -->
 		<div class="subreddit-grid">
 			<div class="subreddit-row">
 				<a href="https://www.reddit.com/r/3Dprinting" target="_blank">
-					<img src="./textures/subreddit/3dprinting.png" alt="3D Printing" class="subreddit-item" data-src="3dprinting.png">
+						<img alt="3D Printing" class="subreddit-item" data-src="3dprinting.png">
 				</a>
 				<a href="https://www.reddit.com/r/AskHistorians" target="_blank">
-					<img src="./textures/subreddit/askhistorians.png" alt="Ask Historians" class="subreddit-item" data-src="askhistorians.png">
+						<img alt="Ask Historians" class="subreddit-item" data-src="askhistorians.png">
 				</a>
 				<a href="https://www.reddit.com/r/DesignMyRoom" target="_blank">
-					<img src="./textures/subreddit/designmyroom.png" alt="Design My Room" class="subreddit-item" data-src="designmyroom.png">
+						<img alt="Design My Room" class="subreddit-item" data-src="designmyroom.png">
 				</a>
 				<a href="https://www.reddit.com/r/Showerthoughts" target="_blank">
-					<img src="./textures/subreddit/showerthoughts.png" alt="Shower Thoughts" class="subreddit-item" data-src="showerthoughts.png">
+						<img alt="Shower Thoughts" class="subreddit-item" data-src="showerthoughts.png">
 				</a>
 				<a href="https://www.reddit.com/r/todayilearned" target="_blank">
-					<img src="./textures/subreddit/todayilearned.png" alt="Today I Learned" class="subreddit-item" data-src="todayilearned.png">
+						<img alt="Today I Learned" class="subreddit-item" data-src="todayilearned.png">
 				</a>
 			</div>
 		</div>
@@ -235,21 +235,16 @@
 			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 			import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
 
-			// Improved path detection function for GitHub Pages compatibility
+			// Modified getBasePath function
 			function getBasePath() {
 				const hostname = window.location.hostname;
 				const path = window.location.pathname;
 				
-				console.log("Current hostname:", hostname);
-				console.log("Current path:", path);
-				
 				// Check if we're on GitHub Pages
 				if (hostname.includes('github.io')) {
-					// Get the full pathname and extract repository name
 					const pathParts = path.split('/');
 					let repoName = '';
 					
-					// The repository name should be the first non-empty segment
 					for (let i = 1; i < pathParts.length; i++) {
 						if (pathParts[i] && pathParts[i].length > 0) {
 							repoName = pathParts[i];
@@ -258,42 +253,47 @@
 					}
 					
 					if (repoName) {
-						console.log(`Detected GitHub Pages repository: ${repoName}`);
-						// Return path with leading and trailing slash
+						console.log(`Using GitHub Pages path: /${repoName}/`);
 						return `/${repoName}/`;
 					}
 				}
 				
-				// For local development, use relative path
 				console.log('Using local development path');
 				return './';
 			}
-			
-			// Get the base path once at load time
+
+			// Improved image loading function
+			function loadImage(img, basePath, filename) {
+				return new Promise((resolve) => {
+					const tryLoad = (path) => {
+						console.log(`Trying to load image from: ${path}`);
+						img.onload = () => resolve(true);
+						img.onerror = () => resolve(false);
+						img.src = path;
+					};
+
+					// Try original path first
+					const originalPath = `${basePath}textures/subreddit/${filename}`;
+					tryLoad(originalPath);
+				});
+			}
+
+			// Update image sources with better error handling
 			const BASE_PATH = getBasePath();
-			console.log("Using base path:", BASE_PATH);
-			
-			// Update image sources to use the correct base path
-			document.getElementById('welcome-img').src = BASE_PATH + 'welcome.png';
-			document.getElementById('footer-img').src = BASE_PATH + 'footer.png';
-			
-			// Update all subreddit images with error handling
-			document.querySelectorAll('.subreddit-item').forEach(img => {
-				// Get the data-src attribute which has just the filename
+			console.log("Base path:", BASE_PATH);
+
+			// Load subreddit images
+			document.querySelectorAll('.subreddit-item').forEach(async (img) => {
 				const filename = img.getAttribute('data-src');
 				if (!filename) return;
 				
-				// Set image source with base path
-				const newSrc = BASE_PATH + 'textures/subreddit/' + filename;
-				console.log(`Setting image source: ${newSrc}`);
-				img.src = newSrc;
+				// Remove src attribute initially to prevent double loading
+				img.removeAttribute('src');
 				
-				// Add error handler to detect 404s
-				img.onerror = function() {
-					console.error(`Failed to load image: ${newSrc}, trying lowercase version`);
-					// Try lowercase version as fallback
-					img.src = newSrc.toLowerCase();
-				};
+				const loaded = await loadImage(img, BASE_PATH, filename);
+				if (!loaded) {
+					console.warn(`Failed to load image: ${filename}`);
+				}
 			});
 
 			// Function to test if a file exists
@@ -503,6 +503,39 @@
 			
 			// Call the VRM loading function at the appropriate time
 			loadVRMModel();
+
+			// Updated Mixamo animation loading function
+			async function loadSwingDancingAnimation(vrm) {
+				if (!vrm) return;
+				
+				vrm.humanoid?.resetNormalizedPose();
+				currentMixer = new THREE.AnimationMixer(vrm.scene);
+				
+				const animationPaths = [
+					'swing_dancing.fbx',
+					'models/swing_dancing.fbx',
+					'models/swing dancing.fbx',
+					'swing dancing.fbx'
+				];
+
+				for (const path of animationPaths) {
+					try {
+						const fullPath = BASE_PATH + path;
+						console.log(`Trying to load animation from: ${fullPath}`);
+						
+						const clip = await loadMixamoAnimation(fullPath, vrm);
+						const action = currentMixer.clipAction(clip);
+						action.timeScale = 0.8;
+						action.play();
+						console.log(`Successfully loaded animation from ${fullPath}`);
+						return;
+					} catch (error) {
+						console.warn(`Failed to load animation from ${path}:`, error);
+					}
+				}
+				
+				console.error('Failed to load animation from any path');
+			}
 
 			// renderer - update to use canvas container
 			const renderer = new THREE.WebGLRenderer({
