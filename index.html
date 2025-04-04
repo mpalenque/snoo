@@ -417,48 +417,6 @@
 				return (BASE_PATH + relativePath).toLowerCase();
 			}
 
-			// Function to load and apply a texture to a material
-			function loadAndApplyTexture(texturePath, material) {
-				// Normalizar la ruta a minúsculas
-				texturePath = texturePath.toLowerCase();
-				
-				if (!material) {
-					console.warn(`Material not found for texture: ${texturePath}`);
-					return;
-				}
-				
-				console.log(`Attempting to load texture from: ${texturePath}`);
-				
-				const textureLoader = new THREE.TextureLoader();
-				textureLoader.load(
-					texturePath,
-					(texture) => {
-						console.log(`Successfully loaded texture from ${texturePath}`);
-						
-						// Basic texture settings
-						texture.flipY = false;
-						
-						// Assign texture map
-						material.map = texture;
-						
-						// Set roughness to 1 for skin materials
-						if (material.name && material.name.toLowerCase().includes('skin')) {
-							material.roughness = 1.0;
-							console.log("Set roughness to 1.0 for skin material");
-						}
-						
-						// Make sure material uses the texture
-						material.needsUpdate = true;
-						
-						console.log(`Applied texture to material: ${material.name || 'unnamed'}`);
-					},
-					undefined,
-					(error) => {
-						console.error(`Error loading texture ${texturePath}:`, error);
-					}
-				);
-			}
-
 			 // Updated URL parameter parsing function
 			function getURLParameter(name) {
 				// Check if the parameter exists in the URL (either as ?param or &param)
@@ -483,7 +441,7 @@
 				return false;
 			}
 
-			// Helper functions for texture handling
+			// Helper functions for texture handling - updated to check more paths
 			function checkAndHandleHoodieTexture(vrm, hoodieMaterial) {
 				for (let i = 1; i <= 40; i++) {
 					const hoodieNum = i < 10 ? `0${i}` : `${i}`;
@@ -491,53 +449,112 @@
 					
 					if (getURLParameter(paramName)) {
 						console.log(`🔄 Applying ${paramName} texture...`);
-						const texturePath = `./textures/hoodie/hoodie_${hoodieNum}.png`.toLowerCase();
+						
+						// Prueba también con mayúsculas/minúsculas diferentes
+						const textureNames = [
+							`./textures/hoodie/hoodie_${hoodieNum}.png`.toLowerCase(),
+							`./textures/Hoodie/Hoodie_${hoodieNum}.png`,
+							`./textures/hoodie/Hoodie_${hoodieNum}.png`,
+							`./hoodie/hoodie_${hoodieNum}.png`.toLowerCase()
+						];
 						
 						if (hoodieMaterial) {
-							loadAndApplyTexture(texturePath, hoodieMaterial);
+							console.log(`Found hoodie material, trying texture names:`, textureNames);
+							loadAndApplyTexture(textureNames[0], hoodieMaterial);
 							return true;
+						} else {
+							console.warn("⚠️ No hoodie material found, looking for alternatives...");
+							// Intenta encontrar otro material que pueda servir
+							let found = false;
+							vrm.scene.traverse((node) => {
+								if (!found && node.material && node.material.name) {
+									const matName = node.material.name.toLowerCase();
+									if (matName.includes('hoodie') || matName === 'test' || matName === 'outfit') {
+										console.log(`Found alternative hoodie material: ${node.material.name}`);
+										loadAndApplyTexture(textureNames[0], node.material);
+										found = true;
+									}
+								}
+							});
+							return found;
 						}
 					}
 				}
 				return false;
 			}
 
-			function checkAndHandleSkinTexture(vrm, skinMaterial) {
-				for (let i = 1; i <= 10; i++) {
-					const skinNum = i < 10 ? `0${i}` : `${i}`;
-					const paramName = `skin-${skinNum}`;
+			// Function to load and apply a texture to a material
+			function loadAndApplyTexture(texturePath, material) {
+				// Normalizar la ruta a minúsculas
+				texturePath = texturePath.toLowerCase();
+				
+				if (!material) {
+					console.warn(`Material not found for texture: ${texturePath}`);
+					return;
+				}
+				
+				console.log(`Attempting to load texture from: ${texturePath}`);
+				
+				// Crear variaciones de rutas para intentar
+				const baseTexturePath = texturePath.replace('./textures/', '');
+				const textureFilename = baseTexturePath.split('/').pop();
+				const textureType = baseTexturePath.split('/')[0]; // 'hoodie', 'skin', 'eyes', etc.
+				
+				// Array de posibles rutas para intentar
+				const pathsToTry = [
+					texturePath,                                  // ./textures/hoodie/hoodie_23.png
+					`./${textureType}/${textureFilename}`,        // ./hoodie/hoodie_23.png
+					`./textures/${textureFilename}`,              // ./textures/hoodie_23.png
+					`./${textureFilename}`,                       // ./hoodie_23.png
+					`/textures/${textureType}/${textureFilename}` // /textures/hoodie/hoodie_23.png
+				];
+				
+				console.log(`Will try these paths in order:`, pathsToTry);
+				
+				// Función para intentar cargar desde múltiples rutas
+				function tryLoadingFromPaths(paths, index = 0) {
+					if (index >= paths.length) {
+						console.error(`Failed to load texture after trying all paths for: ${textureFilename}`);
+						return;
+					}
 					
-					if (getURLParameter(paramName)) {
-						console.log(`🔄 Applying ${paramName} texture...`);
-						const texturePath = `./textures/skin/skin_${skinNum}.png`.toLowerCase();
-						
-						if (skinMaterial) {
-							if (skinMaterial.roughness !== undefined) {
-								skinMaterial.roughness = 1.0;
+					const currentPath = paths[index];
+					console.log(`Trying path ${index + 1}/${paths.length}: ${currentPath}`);
+					
+					const textureLoader = new THREE.TextureLoader();
+					textureLoader.load(
+						currentPath,
+						(texture) => {
+							console.log(`✅ Successfully loaded texture from ${currentPath}`);
+							
+							// Basic texture settings
+							texture.flipY = false;
+							
+							// Assign texture map
+							material.map = texture;
+							
+							// Set roughness to 1 for skin materials
+							if (material.name && material.name.toLowerCase().includes('skin')) {
+								material.roughness = 1.0;
+								console.log("Set roughness to 1.0 for skin material");
 							}
-							loadAndApplyTexture(texturePath, skinMaterial);
-							return true;
+							
+							// Make sure material uses the texture
+							material.needsUpdate = true;
+							
+							console.log(`Applied texture to material: ${material.name || 'unnamed'}`);
+						},
+						undefined,
+						(error) => {
+							console.warn(`Failed to load from ${currentPath}, trying next path...`);
+							// Try next path
+							tryLoadingFromPaths(paths, index + 1);
 						}
-					}
+					);
 				}
-				return false;
-			}
-
-			function checkAndHandleEyesTexture(vrm, leftEyeMaterial, rightEyeMaterial) {
-				for (let i = 1; i <= 10; i++) {
-					const eyesNum = i < 10 ? `0${i}` : `${i}`;
-					const paramName = `eyes-${eyesNum}`;
-					
-					if (getURLParameter(paramName)) {
-						console.log(`🔄 Applying ${paramName} texture...`);
-						const texturePath = `./textures/eyes/eyes_${eyesNum}.png`.toLowerCase();
-						
-						if (leftEyeMaterial) loadAndApplyTexture(texturePath, leftEyeMaterial);
-						if (rightEyeMaterial) loadAndApplyTexture(texturePath, rightEyeMaterial);
-						return true;
-					}
-				}
-				return false;
+				
+				// Comenzar a intentar cargar desde las rutas
+				tryLoadingFromPaths(pathsToTry);
 			}
 
 			// gltf and vrm
