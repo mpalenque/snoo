@@ -262,25 +262,49 @@
 				return './';
 			}
 
-			// Improved image loading function
+			// Improved image loading function with case variations
 			function loadImage(img, basePath, filename) {
 				return new Promise((resolve) => {
-					const tryLoad = (path) => {
-						console.log(`Trying to load image from: ${path}`);
+					const variations = [
+						filename,                          // original: "designmyroom.png"
+						filename.toLowerCase(),            // all lower: "designmyroom.png"
+						filename.toUpperCase(),            // all upper: "DESIGNMYROOM.PNG"
+						filename.charAt(0).toUpperCase() + filename.slice(1), // First letter cap: "Designmyroom.png"
+						'DesignMyRoom.png',               // Explicit name for problematic file
+						'designMyRoom.png',               // Camel case
+						'design-my-room.png',             // With hyphens
+						'design_my_room.png'              // With underscores
+					];
+
+					let currentIndex = 0;
+					
+					const tryNextVariation = () => {
+						if (currentIndex >= variations.length) {
+							console.error(`Failed to load image after trying all variations: ${filename}`);
+							resolve(false);
+							return;
+						}
+
+						const currentVariation = variations[currentIndex];
+						const fullPath = `${basePath}${currentVariation}`;
+						
+						console.log(`Trying variation ${currentIndex + 1}/${variations.length}: ${fullPath}`);
+						
 						img.onload = () => {
-							console.log(`Successfully loaded image from: ${path}`);
+							console.log(`Successfully loaded image from: ${fullPath}`);
 							resolve(true);
 						};
+						
 						img.onerror = () => {
-							console.warn(`Failed to load image from: ${path}`);
-							resolve(false);
+							console.warn(`Failed to load variation: ${fullPath}`);
+							currentIndex++;
+							tryNextVariation();
 						};
-						img.src = path;
+						
+						img.src = fullPath;
 					};
 
-					// Try loading directly from root directory like welcome.png and footer.png
-					const path = `${basePath}${filename}`;
-					tryLoad(path);
+					tryNextVariation();
 				});
 			}
 
