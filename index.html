@@ -192,7 +192,7 @@
 						<img alt="Ask Historians" class="subreddit-item" data-src="askhistorians.png">
 				</a>
 				<a href="https://www.reddit.com/r/DesignMyRoom" target="_blank">
-						<img alt="Design My Room" class="subreddit-item" data-src="designmyroom.png">
+						<img alt="Design My Room" class="subreddit-item" data-src="myroom.png">
 				</a>
 				<a href="https://www.reddit.com/r/Showerthoughts" target="_blank">
 						<img alt="Shower Thoughts" class="subreddit-item" data-src="showerthoughts.png">
@@ -265,46 +265,52 @@
 			// Improved image loading function with case variations
 			function loadImage(img, basePath, filename) {
 				return new Promise((resolve) => {
-					const variations = [
-						filename,                          // original: "designmyroom.png"
-						filename.toLowerCase(),            // all lower: "designmyroom.png"
-						filename.toUpperCase(),            // all upper: "DESIGNMYROOM.PNG"
-						filename.charAt(0).toUpperCase() + filename.slice(1), // First letter cap: "Designmyroom.png"
-						'DesignMyRoom.png',               // Explicit name for problematic file
-						'designMyRoom.png',               // Camel case
-						'design-my-room.png',             // With hyphens
-						'design_my_room.png'              // With underscores
-					];
-
-					let currentIndex = 0;
-					
-					const tryNextVariation = () => {
-						if (currentIndex >= variations.length) {
-							console.error(`Failed to load image after trying all variations: ${filename}`);
-							resolve(false);
-							return;
-						}
-
-						const currentVariation = variations[currentIndex];
-						const fullPath = `${basePath}${currentVariation}`;
+					// Special handling for the myroom/designmyroom case
+					if (filename === 'myroom.png' || filename === 'designmyroom.png') {
+						const variations = [
+							'myroom.png',
+							'designmyroom.png',
+							'deisgnmyroom.png', // Common typo
+							'MYROOM.PNG',
+							'MyRoom.png'
+						];
+						let currentIndex = 0;
 						
-						console.log(`Trying variation ${currentIndex + 1}/${variations.length}: ${fullPath}`);
-						
-						img.onload = () => {
-							console.log(`Successfully loaded image from: ${fullPath}`);
-							resolve(true);
+						const tryNextVariation = () => {
+							if (currentIndex >= variations.length) {
+								console.error(`Failed to load image after trying all variations: ${filename}`);
+								resolve(false);
+								return;
+							}
+
+							const currentVariation = variations[currentIndex];
+							const fullPath = `${basePath}${currentVariation}`;
+							
+							console.log(`Trying variation ${currentIndex + 1}/${variations.length}: ${fullPath}`);
+							
+							img.onload = () => {
+								console.log(`Successfully loaded image from: ${fullPath}`);
+								resolve(true);
+							};
+							
+							img.onerror = () => {
+								console.warn(`Failed to load variation: ${fullPath}`);
+								currentIndex++;
+								tryNextVariation();
+							};
+							
+							img.src = fullPath;
 						};
-						
-						img.onerror = () => {
-							console.warn(`Failed to load variation: ${fullPath}`);
-							currentIndex++;
-							tryNextVariation();
-						};
-						
-						img.src = fullPath;
-					};
 
-					tryNextVariation();
+						tryNextVariation();
+					} else {
+						// Normal image loading for other files
+						const path = `${basePath}${filename}`;
+						console.log(`Loading image from: ${path}`);
+						img.onload = () => resolve(true);
+						img.onerror = () => resolve(false);
+						img.src = path;
+					}
 				});
 			}
 
@@ -404,7 +410,46 @@
 				// For non-VRM files, just return with BASE_PATH
 				return BASE_PATH + relativePath;
 			}
-			
+
+			// Function to load and apply a texture to a material
+			function loadAndApplyTexture(texturePath, material) {
+				if (!material) {
+					console.warn(`Material not found for texture: ${texturePath}`);
+					return;
+				}
+				
+				console.log(`Attempting to load texture from: ${texturePath}`);
+				
+				const textureLoader = new THREE.TextureLoader();
+				textureLoader.load(
+					texturePath,
+					(texture) => {
+						console.log(`Successfully loaded texture from ${texturePath}`);
+						
+						// Basic texture settings
+						texture.flipY = false;
+						
+						// Assign texture map
+						material.map = texture;
+						
+						// Set roughness to 1 for skin materials
+						if (material.name && material.name.toLowerCase().includes('skin')) {
+							material.roughness = 1.0;
+							console.log("Set roughness to 1.0 for skin material");
+						}
+						
+						// Make sure material uses the texture
+						material.needsUpdate = true;
+						
+						console.log(`Applied texture to material: ${material.name || 'unnamed'}`);
+					},
+					undefined,
+					(error) => {
+						console.error(`Error loading texture ${texturePath}:`, error);
+					}
+				);
+			}
+
 			// gltf and vrm
 			let currentVrm = undefined;
 			let currentMixer = undefined;
@@ -504,6 +549,73 @@
 			
 			// Function to handle the loaded VRM model
 			function handleLoadedVRM(vrm) {
+				 // Debug - Print all materials in the model with more detail
+				console.log("=========== DEBUG: ALL MATERIALS ===========");
+				const allMaterials = [];
+				vrm.scene.traverse((node) => {
+					if (node.material && !allMaterials.includes(node.material)) {
+						allMaterials.push(node.material);
+						console.log(`Material: "${node.material.name}"`);
+						console.log(`  - Type: ${node.material.type}`);
+						console.log(`  - Color: ${node.material.color ? '#' + node.material.color.getHexString() : 'N/A'}`);
+						console.log(`  - Map: ${node.material.map ? 'Yes' : 'No'}`);
+						if (node.material.map) {
+							console.log(`    - Map URL: ${node.material.map.source.data ? node.material.map.source.data.src : 'embedded'}`);
+						}
+						console.log(`  - Transparent: ${node.material.transparent}`);
+						console.log(`  - Opacity: ${node.material.opacity}`);
+						console.log(`  - Side: ${node.material.side}`);
+						
+						// For PBR materials
+						if (node.material.metalness !== undefined) {
+							console.log(`  - Metalness: ${node.material.metalness}`);
+							console.log(`  - Roughness: ${node.material.roughness}`);
+						}
+					}
+				});
+				console.log("Total unique materials:", allMaterials.length);
+				console.log("===========================================");
+
+				// Find materials to customize
+				let skinMaterial = null;
+				let leftEyeMaterial = null;
+				let rightEyeMaterial = null;
+				let hoodieMaterial = null;
+				
+				vrm.scene.traverse((node) => {
+					if (node.material) {
+						const matName = node.material.name ? node.material.name.toLowerCase() : '';
+						
+						// Debug
+						console.log(`Checking material: ${node.material.name} (${matName})`);
+						
+						// Find skin material
+						if (matName === "skin" || matName.includes('skin')) {
+							skinMaterial = node.material;
+							console.log("✅ Found SKIN material:", node.material.name);
+						}
+						
+						// Find eye materials
+						if ((matName.includes('eye') && matName.includes('l')) || 
+							matName === "fake eye.l.001") {
+							leftEyeMaterial = node.material;
+							console.log("✅ Found LEFT EYE material:", node.material.name);
+						}
+						
+						if ((matName.includes('eye') && matName.includes('r')) || 
+							matName === "fake eye.r.001") {
+							rightEyeMaterial = node.material;
+							console.log("✅ Found RIGHT EYE material:", node.material.name);
+						}
+						
+						// Find hoodie material
+						if (node.material.name === "Test" || matName === "test") {
+							hoodieMaterial = node.material;
+							console.log("✅ Found HOODIE material (Test):", node.material.name);
+						}
+					}
+				});
+
 				// Adjust initial VRM position
 				vrm.scene.position.y = 0.5; // Raise the model slightly
 
@@ -562,16 +674,71 @@
 			// Call the VRM loading function at the appropriate time
 			loadVRMModel();
 
-			 // Define loadMixamoAnimation before it's used (add this before loadSwingDancingAnimation)
-			async function loadMixamoAnimation(url, vrm) {
-				console.log(`Loading Mixamo animation from ${url}`);
-				const loader = new FBXLoader();
+			// Define Mixamo to VRM bone mapping with complete bone list
+			const mixamoVRMRigMap = {
+				mixamorigHips: 'hips',
+				mixamorigSpine: 'spine',
+				mixamorigSpine1: 'chest',
+				mixamorigSpine2: 'upperChest',
+				mixamorigNeck: 'neck',
+				mixamorigHead: 'head',
+				mixamorigLeftShoulder: 'leftShoulder',
+				mixamorigLeftArm: 'leftUpperArm',
+				mixamorigLeftForeArm: 'leftLowerArm',
+				mixamorigLeftHand: 'leftHand',
+				mixamorigLeftHandThumb1: 'leftThumbMetacarpal',
+				mixamorigLeftHandThumb2: 'leftThumbProximal',
+				mixamorigLeftHandThumb3: 'leftThumbDistal',
+				mixamorigLeftHandIndex1: 'leftIndexProximal',
+				mixamorigLeftHandIndex2: 'leftIndexIntermediate',
+				mixamorigLeftHandIndex3: 'leftIndexDistal',
+				mixamorigLeftHandMiddle1: 'leftMiddleProximal',
+				mixamorigLeftHandMiddle2: 'leftMiddleIntermediate',
+				mixamorigLeftHandMiddle3: 'leftMiddleDistal',
+				mixamorigLeftHandRing1: 'leftRingProximal',
+				mixamorigLeftHandRing2: 'leftRingIntermediate',
+				mixamorigLeftHandRing3: 'leftRingDistal',
+				mixamorigLeftHandPinky1: 'leftLittleProximal',
+				mixamorigLeftHandPinky2: 'leftLittleIntermediate',
+				mixamorigLeftHandPinky3: 'leftLittleDistal',
+				mixamorigRightShoulder: 'rightShoulder',
+				mixamorigRightArm: 'rightUpperArm',
+				mixamorigRightForeArm: 'rightLowerArm',
+				mixamorigRightHand: 'rightHand',
+				mixamorigRightHandPinky1: 'rightLittleProximal',
+				mixamorigRightHandPinky2: 'rightLittleIntermediate',
+				mixamorigRightHandPinky3: 'rightLittleDistal',
+				mixamorigRightHandRing1: 'rightRingProximal',
+				mixamorigRightHandRing2: 'rightRingIntermediate',
+				mixamorigRightHandRing3: 'rightRingDistal',
+				mixamorigRightHandMiddle1: 'rightMiddleProximal',
+				mixamorigRightHandMiddle2: 'rightMiddleIntermediate',
+				mixamorigRightHandMiddle3: 'rightMiddleDistal',
+				mixamorigRightHandIndex1: 'rightIndexProximal',
+				mixamorigRightHandIndex2: 'rightIndexIntermediate',
+				mixamorigRightHandIndex3: 'rightIndexDistal',
+				mixamorigRightHandThumb1: 'rightThumbMetacarpal',
+				mixamorigRightHandThumb2: 'rightThumbProximal',
+				mixamorigRightHandThumb3: 'rightThumbDistal',
+				mixamorigLeftUpLeg: 'leftUpperLeg',
+				mixamorigLeftLeg: 'leftLowerLeg',
+				mixamorigLeftFoot: 'leftFoot',
+				mixamorigLeftToeBase: 'leftToes',
+				mixamorigRightUpLeg: 'rightUpperLeg',
+				mixamorigRightLeg: 'rightLowerLeg',
+				mixamorigRightFoot: 'rightFoot',
+				mixamorigRightToeBase: 'rightToes'
+			};
+
+			// Replace existing loadMixamoAnimation with this version
+			function loadMixamoAnimation(url, vrm) {
+				const loader = new FBXLoader(); // A loader which loads FBX
 				return loader.loadAsync(url).then((asset) => {
 					const clip = THREE.AnimationClip.findByName(asset.animations, 'mixamo.com');
 					if (!clip) {
 						throw new Error('No mixamo.com animation found in asset');
 					}
-					
+
 					const tracks = [];
 					const restRotationInverse = new THREE.Quaternion();
 					const parentRestWorldRotation = new THREE.Quaternion();
@@ -618,9 +785,7 @@
 								const value = track.values.map((v, i) => 
 									(vrm.meta?.metaVersion === '0' && i % 3 !== 1 ? -v : v) * hipsPositionScale
 								);
-								tracks.push(
-									new THREE.VectorKeyframeTrack(`${vrmNodeName}.${propertyName}`, track.times, value)
-								);
+								tracks.push(new THREE.VectorKeyframeTrack(`${vrmNodeName}.${propertyName}`, track.times, value));
 							}
 						}
 					});
@@ -629,51 +794,91 @@
 				});
 			}
 
-			// Updated Mixamo animation loading function
-			async function loadSwingDancingAnimation(vrm) {
-				if (!vrm || !vrm.humanoid) return;
-				
-				console.log('Starting animation loading...');
+			// Replace existing loadSwingDancingAnimation with this version
+			function loadSwingDancingAnimation(vrm) {
+				// Reset pose before applying animation
 				vrm.humanoid.resetNormalizedPose();
+				
+				// Create AnimationMixer for VRM
 				currentMixer = new THREE.AnimationMixer(vrm.scene);
 				
-				// Simplified animation paths
-				const animationPaths = [
-					'swing_dancing.fbx',
-					'models/swing_dancing.fbx',
-					'Swing_Dancing.fbx'
-				];
-
-				for (const path of animationPaths) {
-					try {
-						const fullPath = BASE_PATH + path;
-						console.log(`Attempting to load animation from: ${fullPath}`);
-						
-						const fbx = await new Promise((resolve, reject) => {
-							new FBXLoader().load(fullPath, resolve, undefined, reject);
-						});
-						
-						console.log('FBX loaded, processing animation...');
-						const clip = THREE.AnimationClip.findByName(fbx.animations, 'mixamo.com');
-						if (!clip) {
-							console.warn(`No 'mixamo.com' animation found in ${fullPath}`);
-							continue;
-						}
-						
-						console.log('Converting animation for VRM...');
-						const convertedClip = await loadMixamoAnimation(fullPath, vrm);
-						const action = currentMixer.clipAction(convertedClip);
+				console.log('Trying direct animation loading approach...');
+				loadMixamoAnimation('./swing_dancing.fbx', vrm)
+					.then((clip) => {
+						const action = currentMixer.clipAction(clip);
 						action.timeScale = 0.8;
 						action.play();
+						console.log('Animation loaded successfully using direct approach');
+					})
+					.catch((directError) => {
+						console.warn('Direct animation loading failed:', directError);
+						console.log('Falling back to alternative paths...');
 						
-						console.log('Animation successfully loaded and playing');
-						return;
-					} catch (error) {
-						console.warn(`Failed to load animation from ${path}:`, error);
-					}
-				}
-				
-				console.error('Failed to load animation from any path');
+						// Determine if we're on GitHub Pages
+						const isGitHubPages = window.location.hostname === 'mpalenque.github.io';
+						
+						// Array of possible paths to try in order
+						const pathsToTry = isGitHubPages ? [
+							'/Snoo/models/swing dancing.fbx',
+							'/snoo/models/swing dancing.fbx',
+							'/Snoo/swing dancing.fbx',
+							'/snoo/swing dancing.fbx'
+						] : [
+							'models/swing dancing.fbx',
+							'./models/swing dancing.fbx',
+							'../models/swing dancing.fbx',
+							'swing dancing.fbx',
+							'./swing dancing.fbx'
+						];
+
+						console.log('Trying alternative paths:', pathsToTry);
+
+						// Function to try loading from each path
+						function tryLoadingFromPaths(paths) {
+							if (paths.length === 0) {
+								console.error('All paths failed to load animation');
+								return Promise.reject('No more paths to try');
+							}
+
+							const currentPath = paths[0];
+							console.log('Attempting to load animation from:', currentPath);
+
+							return loadMixamoAnimation(currentPath, vrm)
+								.then((clip) => {
+									console.log('Successfully loaded animation from:', currentPath);
+									return clip;
+								})
+								.catch((error) => {
+									console.warn(`Failed to load from ${currentPath}:`, error);
+									return tryLoadingFromPaths(paths.slice(1));
+								});
+						}
+
+						// Start trying paths
+						tryLoadingFromPaths(pathsToTry)
+							.then((clip) => {
+								const action = currentMixer.clipAction(clip);
+								action.timeScale = 0.7;
+								action.play();
+								console.log('Animation playing successfully');
+							})
+							.catch((error) => {
+								console.error('All animation loading attempts failed:', error);
+								
+								// Set a default pose instead of animation
+								try {
+									const leftArm = vrm.humanoid?.getNormalizedBoneNode('leftUpperArm');
+									const rightArm = vrm.humanoid?.getNormalizedBoneNode('rightUpperArm');
+									
+									if (leftArm) leftArm.rotation.z = 0.3;
+									if (rightArm) rightArm.rotation.z = -0.3;
+									
+									console.log('Applied static pose as animation fallback');
+								} catch (e) {
+									console.warn('Could not apply fallback pose:', e);
+								}
+							});
+					});
 			}
 
 			// renderer - update to use canvas container
