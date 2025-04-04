@@ -186,7 +186,7 @@
 		<div class="subreddit-grid">
 			<div class="subreddit-row">
 				<a href="https://www.reddit.com/r/3Dprinting" target="_blank">
-						<img alt="3D Printing" class="subreddit-item" data-src="3dprinting.png">
+						<img alt="3D Printing" class="subreddit-item" data-src="print.png">
 				</a>
 				<a href="https://www.reddit.com/r/AskHistorians" target="_blank">
 						<img alt="Ask Historians" class="subreddit-item" data-src="askhistorians.png">
@@ -195,7 +195,7 @@
 						<img alt="Design My Room" class="subreddit-item" data-src="myroom.png">
 				</a>
 				<a href="https://www.reddit.com/r/Showerthoughts" target="_blank">
-						<img alt="Shower Thoughts" class="subreddit-item" data-src="showerthoughts.png">
+						<img alt="Shower Thoughts" class="subreddit-item" data-src="shower.png">
 				</a>
 				<a href="https://www.reddit.com/r/todayilearned" target="_blank">
 						<img alt="Today I Learned" class="subreddit-item" data-src="todayilearned.png">
@@ -909,7 +909,7 @@
 				currentMixer = new THREE.AnimationMixer(vrm.scene);
 				
 				console.log('Trying direct animation loading approach...');
-				loadMixamoAnimation('./swing_dancing.fbx', vrm)
+				loadMixamoAnimation('./dance.fbx', vrm)
 					.then((clip) => {
 						const action = currentMixer.clipAction(clip);
 						action.timeScale = 0.8;
@@ -923,18 +923,18 @@
 						// Determine if we're on GitHub Pages
 						const isGitHubPages = window.location.hostname === 'mpalenque.github.io';
 						
-						// Array of possible paths to try in order - MODIFIED TO USE UNDERSCORES
+						// Array of possible paths to try in order - MODIFIED TO USE DANCE.FBX
 						const pathsToTry = isGitHubPages ? [
-							'/Snoo/models/swing_dancing.fbx',
-							'/snoo/models/swing_dancing.fbx',
-							'/Snoo/swing_dancing.fbx',
-							'/snoo/swing_dancing.fbx'
+							'/Snoo/models/dance.fbx',
+							'/snoo/models/dance.fbx',
+							'/Snoo/dance.fbx',
+							'/snoo/dance.fbx'
 						] : [
-							'models/swing_dancing.fbx',
-							'./models/swing_dancing.fbx',
-							'../models/swing_dancing.fbx',
-							'swing_dancing.fbx',
-							'./swing_dancing.fbx'
+							'models/dance.fbx',
+							 './models/dance.fbx',
+							 '../models/dance.fbx',
+							 'dance.fbx',
+							 './dance.fbx'
 						];
 
 						console.log('Trying alternative paths:', pathsToTry);
