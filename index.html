@@ -450,6 +450,87 @@
 				);
 			}
 
+			 // Updated URL parameter parsing function
+			function getURLParameter(name) {
+				// Check if the parameter exists in the URL (either as ?param or &param)
+				const url = window.location.href;
+				const urlParams = new URLSearchParams(window.location.search);
+				
+				// Debug output
+				console.log(`Checking for parameter: ${name} in URL: ${url}`);
+				
+				// First try exact match with URLSearchParams
+				if (urlParams.has(name)) {
+					console.log(`Found parameter ${name} using URLSearchParams`);
+					return true;
+				}
+				
+				// Then check if it's in the URL as a substring
+				if (url.includes(`?${name}`) || url.includes(`&${name}`)) {
+					console.log(`Found parameter ${name} as substring in URL`);
+					return true;
+				}
+				
+				return false;
+			}
+
+			// Helper functions for texture handling
+			function checkAndHandleHoodieTexture(vrm, hoodieMaterial) {
+				for (let i = 1; i <= 40; i++) {
+					const hoodieNum = i < 10 ? `0${i}` : `${i}`;
+					const paramName = `hoodie-${hoodieNum}`;
+					
+					if (getURLParameter(paramName)) {
+						console.log(`🔄 Applying ${paramName} texture...`);
+						const texturePath = `./textures/hoodie/hoodie_${hoodieNum}.png`;
+						
+						if (hoodieMaterial) {
+							loadAndApplyTexture(texturePath, hoodieMaterial);
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+
+			function checkAndHandleSkinTexture(vrm, skinMaterial) {
+				for (let i = 1; i <= 10; i++) {
+					const skinNum = i < 10 ? `0${i}` : `${i}`;
+					const paramName = `skin-${skinNum}`;
+					
+					if (getURLParameter(paramName)) {
+						console.log(`🔄 Applying ${paramName} texture...`);
+						const texturePath = `./textures/skin/skin_${skinNum}.png`;
+						
+						if (skinMaterial) {
+							if (skinMaterial.roughness !== undefined) {
+								skinMaterial.roughness = 1.0;
+							}
+							loadAndApplyTexture(texturePath, skinMaterial);
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+
+			function checkAndHandleEyesTexture(vrm, leftEyeMaterial, rightEyeMaterial) {
+				for (let i = 1; i <= 10; i++) {
+					const eyesNum = i < 10 ? `0${i}` : `${i}`;
+					const paramName = `eyes-${eyesNum}`;
+					
+					if (getURLParameter(paramName)) {
+						console.log(`🔄 Applying ${paramName} texture...`);
+						const texturePath = `./textures/eyes/eyes_${eyesNum}.png`;
+						
+						if (leftEyeMaterial) loadAndApplyTexture(texturePath, leftEyeMaterial);
+						if (rightEyeMaterial) loadAndApplyTexture(texturePath, rightEyeMaterial);
+						return true;
+					}
+				}
+				return false;
+			}
+
 			// gltf and vrm
 			let currentVrm = undefined;
 			let currentMixer = undefined;
@@ -662,6 +743,31 @@
 				// Update debug panel with material information
 				updateDebugPanel(vrm);
 				
+				 // Check for textures
+				console.log("Checking for texture parameters in URL...");
+				
+				// Check for skin texture
+				const skinTextureApplied = checkAndHandleSkinTexture(vrm, skinMaterial);
+				
+				// Check for eyes texture
+				const eyesTextureApplied = checkAndHandleEyesTexture(vrm, leftEyeMaterial, rightEyeMaterial);
+				
+				// Check for hoodie texture
+				const hoodieTextureApplied = checkAndHandleHoodieTexture(vrm, hoodieMaterial);
+				
+				// Check for interest texture
+				if (getURLParameter('interest-02')) {
+					console.log("🔄 Looking for interest-02 texture...");
+					vrm.scene.traverse((node) => {
+						if (node.material && node.material.name && 
+							(node.material.name.toLowerCase().includes('interest') || 
+							 node.material.name.toLowerCase().includes('badge'))) {
+							console.log("✅ Found interest material:", node.material.name);
+							loadAndApplyTexture('./textures/interest/interest_02.png', node.material);
+						}
+					});
+				}
+
 				// Set expression
 				if (vrm.expressionManager) {
 					vrm.expressionManager.setValue('joy', 1.0);
