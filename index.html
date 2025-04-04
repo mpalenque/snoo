@@ -182,7 +182,7 @@
 			<img src="./welcome.png" alt="Welcome" id="welcome-img">
 		</div>
 		
-		 <!-- Subreddit grid with corrected paths -->
+		 <!-- Subreddit grid with corrected paths in lowercase -->
 		<div class="subreddit-grid">
 			<div class="subreddit-row">
 				<a href="https://www.reddit.com/r/3Dprinting" target="_blank">
@@ -271,8 +271,8 @@
 							'myroom.png',
 							'designmyroom.png',
 							'deisgnmyroom.png', // Common typo
-							'MYROOM.PNG',
-							'MyRoom.png'
+							 'myroom.png', // En lugar de MYROOM.PNG
+							 'myroom.png'  // En lugar de MyRoom.png
 						];
 						let currentIndex = 0;
 						
@@ -482,7 +482,7 @@
 					
 					if (getURLParameter(paramName)) {
 						console.log(`🔄 Applying ${paramName} texture...`);
-						const texturePath = `./textures/hoodie/hoodie_${hoodieNum}.png`;
+						const texturePath = `./textures/hoodie/hoodie_${hoodieNum}.png`.toLowerCase();
 						
 						if (hoodieMaterial) {
 							loadAndApplyTexture(texturePath, hoodieMaterial);
@@ -500,7 +500,7 @@
 					
 					if (getURLParameter(paramName)) {
 						console.log(`🔄 Applying ${paramName} texture...`);
-						const texturePath = `./textures/skin/skin_${skinNum}.png`;
+						const texturePath = `./textures/skin/skin_${skinNum}.png`.toLowerCase();
 						
 						if (skinMaterial) {
 							if (skinMaterial.roughness !== undefined) {
@@ -521,7 +521,7 @@
 					
 					if (getURLParameter(paramName)) {
 						console.log(`🔄 Applying ${paramName} texture...`);
-						const texturePath = `./textures/eyes/eyes_${eyesNum}.png`;
+						const texturePath = `./textures/eyes/eyes_${eyesNum}.png`.toLowerCase();
 						
 						if (leftEyeMaterial) loadAndApplyTexture(texturePath, leftEyeMaterial);
 						if (rightEyeMaterial) loadAndApplyTexture(texturePath, rightEyeMaterial);
@@ -763,7 +763,7 @@
 							(node.material.name.toLowerCase().includes('interest') || 
 							 node.material.name.toLowerCase().includes('badge'))) {
 							console.log("✅ Found interest material:", node.material.name);
-							loadAndApplyTexture('./textures/interest/interest_02.png', node.material);
+							loadAndApplyTexture('./textures/interest/interest_02.png'.toLowerCase(), node.material);
 						}
 					});
 				}
@@ -909,7 +909,7 @@
 				currentMixer = new THREE.AnimationMixer(vrm.scene);
 				
 				console.log('Trying direct animation loading approach...');
-				loadMixamoAnimation('./dance.fbx', vrm)
+				loadMixamoAnimation('./dance.fbx'.toLowerCase(), vrm)
 					.then((clip) => {
 						const action = currentMixer.clipAction(clip);
 						action.timeScale = 0.8;
@@ -923,18 +923,18 @@
 						// Determine if we're on GitHub Pages
 						const isGitHubPages = window.location.hostname === 'mpalenque.github.io';
 						
-						// Array of possible paths to try in order - MODIFIED TO USE DANCE.FBX
+						// Array of possible paths to try in order - MODIFIED TO USE DANCE.FBX in lowercase
 						const pathsToTry = isGitHubPages ? [
-							'/Snoo/models/dance.fbx',
-							'/snoo/models/dance.fbx',
-							'/Snoo/dance.fbx',
-							'/snoo/dance.fbx'
+							'/snoo/models/dance.fbx'.toLowerCase(),
+							'/snoo/models/dance.fbx'.toLowerCase(),
+							'/snoo/dance.fbx'.toLowerCase(),
+							 '/snoo/dance.fbx'.toLowerCase()
 						] : [
-							'models/dance.fbx',
-							 './models/dance.fbx',
-							 '../models/dance.fbx',
-							 'dance.fbx',
-							 './dance.fbx'
+							'models/dance.fbx'.toLowerCase(),
+							 './models/dance.fbx'.toLowerCase(),
+							 '../models/dance.fbx'.toLowerCase(),
+							 'dance.fbx'.toLowerCase(),
+							 './dance.fbx'.toLowerCase()
 						];
 
 						console.log('Trying alternative paths:', pathsToTry);
