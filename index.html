@@ -106,26 +106,29 @@
 				}
 				
 				.subreddit-row {
-					flex-direction: column; /* Stack vertically on very small screens */
+					flex-direction: row; /* Allow horizontal layout */
+					flex-wrap: wrap;
+					justify-content: center;
 					align-items: center;
-					gap: 5px;
+					gap: 10px;
 				}
 				
 				.subreddit-row a {
-					width: 90%; /* Make buttons take more width */
-					max-width: 280px;
-					height: 45px; /* Even smaller on very small screens */
-					margin-bottom: 8px;
+					width: auto; /* Auto width based on content */
+					max-width: 150px; /* Half width compared to desktop */
+					height: 30px; /* Half of desktop height (60px) */
+					margin-bottom: 10px;
 				}
 				
 				.subreddit-item {
-					height: 45px;
+					height: 30px; /* Half of desktop height */
+					max-width: 150px; /* Half of desktop max-width */
 				}
 				
 				/* Reduce bobbing animation on mobile for better performance */
 				@keyframes bobAnimation {
 					0% { transform: translateY(0) translateX(0); }
-					50% { transform: translateY(-3px) translateX(0); } /* Smaller movement */
+					50% { transform: translateY(-2px) translateX(0); } /* Even smaller movement */
 					100% { transform: translateY(0) translateX(0); }
 				}
 			}
