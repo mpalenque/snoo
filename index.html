@@ -859,6 +859,22 @@
 				vrm.scene.traverse((node) => {
 					if (node.material && !allMaterials.includes(node.material)) {
 						allMaterials.push(node.material);
+						console.log(`Material: "${node.material.name}"`);
+						console.log(`  - Type: ${node.material.type}`);
+						console.log(`  - Color: ${node.material.color ? '#' + node.material.color.getHexString() : 'N/A'}`);
+						console.log(`  - Map: ${node.material.map ? 'Yes' : 'No'}`);
+						if (node.material.map) {
+							console.log(`    - Map URL: ${node.material.map.source.data ? node.material.map.source.data.src : 'embedded'}`);
+						}
+						console.log(`  - Transparent: ${node.material.transparent}`);
+						console.log(`  - Opacity: ${node.material.opacity}`);
+						console.log(`  - Side: ${node.material.side}`);
+						
+						// For PBR materials
+						if (node.material.metalness !== undefined) {
+							console.log(`  - Metalness: ${node.material.metalness}`);
+							console.log(`  - Roughness: ${node.material.roughness}`);
+						}
 					}
 				});
 				console.log("Total unique materials:", allMaterials.length);
@@ -871,7 +887,37 @@
 				let hoodieMaterial = null;
 				
 				vrm.scene.traverse((node) => {
-					// ...existing material finding code...
+					if (node.material) {
+						const matName = node.material.name ? node.material.name.toLowerCase() : '';
+						
+						// Debug
+						console.log(`Checking material: ${node.material.name} (${matName})`);
+						
+						// Find skin material
+						if (matName === "skin" || matName.includes('skin')) {
+							skinMaterial = node.material;
+							console.log("✅ Found SKIN material:", node.material.name);
+						}
+						
+						// Find eye materials
+						if ((matName.includes('eye') && matName.includes('l')) || 
+							matName === "fake eye.l.001") {
+							leftEyeMaterial = node.material;
+							console.log("✅ Found LEFT EYE material:", node.material.name);
+						}
+						
+						if ((matName.includes('eye') && matName.includes('r')) || 
+							matName === "fake eye.r.001") {
+							rightEyeMaterial = node.material;
+							console.log("✅ Found RIGHT EYE material:", node.material.name);
+						}
+						
+						// Find hoodie material
+						if (node.material.name === "Test" || matName === "test") {
+							hoodieMaterial = node.material;
+							console.log("✅ Found HOODIE material (Test):", node.material.name);
+						}
+					}
 				});
 
 				// Adjust initial VRM position
@@ -925,7 +971,29 @@
 				updateDebugPanel(vrm);
 				
 				// Check for textures
-				// ...existing texture checking code...
+				console.log("Checking for texture parameters in URL...");
+				
+				// Check for skin texture
+				const skinTextureApplied = checkAndHandleSkinTexture(vrm, skinMaterial);
+				
+				// Check for eyes texture
+				const eyesTextureApplied = checkAndHandleEyesTexture(vrm, leftEyeMaterial, rightEyeMaterial);
+				
+				// Check for hoodie texture
+				const hoodieTextureApplied = checkAndHandleHoodieTexture(vrm, hoodieMaterial);
+				
+				// Check for interest texture
+				if (getURLParameter('interest-02')) {
+					console.log("🔄 Looking for interest-02 texture...");
+					vrm.scene.traverse((node) => {
+						if (node.material && node.material.name && 
+							(node.material.name.toLowerCase().includes('interest') || 
+							 node.material.name.toLowerCase().includes('badge'))) {
+							console.log("✅ Found interest material:", node.material.name);
+							loadAndApplyTexture('./textures/interest/interest_02.png'.toLowerCase(), node.material);
+						}
+					});
+				}
 
 				// Set expression
 				if (vrm.expressionManager) {
