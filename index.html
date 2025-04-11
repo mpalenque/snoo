@@ -49,28 +49,92 @@
 				gap: 20px;
 				flex-wrap: wrap;
 				padding: 0 5%;
+				align-items: center; /* Align items vertically */
 			}
+			
+			/* Style for the link container */
+			.subreddit-row a {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				height: 60px; /* Reduced fixed height for all containers */
+				position: relative;
+				text-align: center;
+				margin-bottom: 15px; /* Add space between rows when wrapped */
+			}
+			
 			.subreddit-item {
-				max-width: 300px; /* Doubled from 150px */
-				width: 100%;
-				height: auto;
-				animation: floatAnimation 3s ease-in-out infinite,
-				          slideIn 1s ease-out forwards;
+				max-width: 300px; /* Maximum width */
+				height: 60px; /* Fixed exact height - no max-height */
+				width: auto; /* Let width adjust based on aspect ratio */
+				object-fit: scale-down; /* Scale down to fit container without distortion */
+				animation: bobAnimation 3s ease-in-out infinite,
+				         slideIn 1s ease-out forwards;
 				opacity: 0;
 				transform: translateX(-100px);
 			}
 			
-			/* Animation for floating effect */
-			@keyframes floatAnimation {
-				0% {
-					transform: translateY(0);
+			 /* Responsive adjustments */
+			@media screen and (max-width: 768px) {
+				.header img, .footer img {
+					max-width: 80%; /* Wider on mobile */
 				}
-				50% {
-					transform: translateY(-10px);
+				
+				.header {
+					margin-bottom: 20px; /* Less margin on mobile */
 				}
-				100% {
-					transform: translateY(0);
+				
+				.subreddit-row {
+					gap: 10px; /* Less space between items on mobile */
 				}
+				
+				.subreddit-row a {
+					height: 50px; /* Smaller height on mobile */
+					margin-bottom: 10px; /* Less bottom margin on mobile */
+				}
+				
+				.subreddit-item {
+					height: 50px; /* Smaller height on mobile */
+					max-width: 250px; /* Smaller max-width on mobile */
+				}
+			}
+			
+			/* iPhone specific adjustments */
+			@media screen and (max-width: 480px) {
+				.header img, .footer img {
+					max-width: 90%; /* Even wider on small mobile devices */
+				}
+				
+				.subreddit-row {
+					flex-direction: column; /* Stack vertically on very small screens */
+					align-items: center;
+					gap: 5px;
+				}
+				
+				.subreddit-row a {
+					width: 90%; /* Make buttons take more width */
+					max-width: 280px;
+					height: 45px; /* Even smaller on very small screens */
+					margin-bottom: 8px;
+				}
+				
+				.subreddit-item {
+					height: 45px;
+				}
+				
+				/* Reduce bobbing animation on mobile for better performance */
+				@keyframes bobAnimation {
+					0% { transform: translateY(0) translateX(0); }
+					50% { transform: translateY(-3px) translateX(0); } /* Smaller movement */
+					100% { transform: translateY(0) translateX(0); }
+				}
+			}
+			
+			/* Separate bobbing animation that doesn't affect perceived height */
+			@keyframes bobAnimation {
+				0% { transform: translateY(0) translateX(0); }
+				50% { transform: translateY(-5px) translateX(0); }
+				100% { transform: translateY(0) translateX(0); }
 			}
 			
 			/* Animation for sliding in from left */
@@ -186,19 +250,19 @@
 		<div class="subreddit-grid">
 			<div class="subreddit-row">
 				<a href="https://www.reddit.com/r/3Dprinting" target="_blank">
-						<img alt="3D Printing" class="subreddit-item" data-src="print.png">
+					<img alt="3D Printing" class="subreddit-item" data-src="print.png">
 				</a>
 				<a href="https://www.reddit.com/r/AskHistorians" target="_blank">
-						<img alt="Ask Historians" class="subreddit-item" data-src="askhistorians.png">
+					<img alt="Ask Historians" class="subreddit-item" data-src="askhistorians.png">
 				</a>
 				<a href="https://www.reddit.com/r/DesignMyRoom" target="_blank">
-						<img alt="Design My Room" class="subreddit-item" data-src="myroom.png">
+					<img alt="Design My Room" class="subreddit-item" data-src="myroom.png">
 				</a>
 				<a href="https://www.reddit.com/r/Showerthoughts" target="_blank">
-						<img alt="Shower Thoughts" class="subreddit-item" data-src="shower.png">
+					<img alt="Shower Thoughts" class="subreddit-item" data-src="shower.png">
 				</a>
 				<a href="https://www.reddit.com/r/todayilearned" target="_blank">
-						<img alt="Today I Learned" class="subreddit-item" data-src="todayilearned.png">
+					<img alt="Today I Learned" class="subreddit-item" data-src="todayilearned.png">
 				</a>
 			</div>
 		</div>
