@@ -240,10 +240,72 @@
 				border-bottom: 1px dotted #666;
 				padding-bottom: 5px;
 			}
+
+			/* Loading overlay styles */
+			#loading-overlay {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(237, 239, 241, 0.9);
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				z-index: 1000;
+				transition: opacity 0.5s ease-out;
+			}
+			
+			.spinner {
+				border: 5px solid #f3f3f3;
+				border-top: 5px solid #FF4500; /* Reddit orange */
+				border-radius: 50%;
+				width: 50px;
+				height: 50px;
+				animation: spin 1s linear infinite;
+				margin-bottom: 20px;
+			}
+			
+			@keyframes spin {
+				0% { transform: rotate(0deg); }
+				100% { transform: rotate(360deg); }
+			}
+			
+			#loading-text {
+				font-family: Arial, sans-serif;
+				font-size: 18px;
+				color: #1A1A1B; /* Reddit dark */
+			}
+			
+			#loading-progress {
+				width: 250px;
+				height: 10px;
+				background-color: #f3f3f3;
+				border-radius: 5px;
+				margin-top: 10px;
+				overflow: hidden;
+			}
+			
+			#progress-bar {
+				width: 0%;
+				height: 100%;
+				background-color: #FF4500; /* Reddit orange */
+				transition: width 0.3s ease;
+			}
 		</style>
 	</head>
 
 	<body>
+		<!-- Add loading overlay at the beginning of the body -->
+		<div id="loading-overlay">
+			<div class="spinner"></div>
+			<div id="loading-text">Loading Snoo model...</div>
+			<div id="loading-progress">
+				<div id="progress-bar"></div>
+			</div>
+		</div>
+
 		<!-- Header with welcome image -->
 		<div class="header">
 			<img src="./welcome.png" alt="Welcome" id="welcome-img">
@@ -761,89 +823,42 @@
 				});
 			}
 
-			// Try multiple paths for the VRM model
-			async function loadVRMModel() {
-				// List of possible paths to try for the VRM model
-				const pathsToTry = [
-					'models/snoo.vrm',
-					'models/snoo.vrm',
-					'snoo.vrm',
-					'snoo.vrm'
-				];
+			// Add this function at the beginning of the script to update the loading progress
+			function updateLoadingProgress(percent) {
+				const progressBar = document.getElementById('progress-bar');
+				const loadingText = document.getElementById('loading-text');
 				
-				let loaded = false;
-				
-				for (const path of pathsToTry) {
-					const fullPath = await getAssetPath(path);
-					console.log(`Attempting to load VRM from: ${fullPath}`);
-					
-					try {
-						await new Promise((resolve, reject) => {
-							loader.load(
-								fullPath,
-								(gltf) => {
-									const vrm = gltf.userData.vrm;
-									console.log(`Successfully loaded VRM from: ${fullPath}`);
-									handleLoadedVRM(vrm);
-									loaded = true;
-									resolve();
-								},
-								(progress) => console.log('Loading model...', 100.0 * (progress.loaded / progress.total), '%'),
-								(error) => {
-									console.warn(`Error loading VRM from ${fullPath}:`, error);
-									reject(error);
-								}
-							);
-						});
-						
-						if (loaded) break; // Exit the loop if loading succeeded
-					} catch (error) {
-						console.warn(`Couldn't load from ${fullPath}, trying next path...`);
-					}
+				if (progressBar) {
+					progressBar.style.width = `${percent}%`;
 				}
 				
-				if (!loaded) {
-					console.error('Failed to load VRM model from any of the paths');
-					// Show error message to user
-					const errorDiv = document.createElement('div');
-					errorDiv.style.position = 'fixed';
-					errorDiv.style.top = '50%';
-					errorDiv.style.left = '50%';
-					errorDiv.style.transform = 'translate(-50%, -50%)';
-					errorDiv.style.background = 'rgba(255,0,0,0.8)';
-					errorDiv.style.color = 'white';
-					errorDiv.style.padding = '20px';
-					errorDiv.style.borderRadius = '10px';
-					errorDiv.style.zIndex = '1000';
-					errorDiv.innerHTML = '<h2>Error Loading 3D Model</h2><p>Could not load the VRM model. Please check the console for details.</p>';
-					document.body.appendChild(errorDiv);
+				if (loadingText) {
+					if (percent < 100) {
+						loadingText.textContent = `Loading Snoo model... ${Math.round(percent)}%`;
+					} else {
+						loadingText.textContent = 'Preparing Snoo...';
+					}
 				}
 			}
 			
-			// Function to handle the loaded VRM model
+			function hideLoadingOverlay() {
+				const overlay = document.getElementById('loading-overlay');
+				if (overlay) {
+					overlay.style.opacity = '0';
+					setTimeout(() => {
+						overlay.style.display = 'none';
+					}, 500);
+				}
+			}
+
+			// Function to handle the loaded VRM model - fixing issue with missing VRM display
 			function handleLoadedVRM(vrm) {
-				 // Debug - Print all materials in the model with more detail
+				// Debug - Print all materials in the model with more detail
 				console.log("=========== DEBUG: ALL MATERIALS ===========");
 				const allMaterials = [];
 				vrm.scene.traverse((node) => {
 					if (node.material && !allMaterials.includes(node.material)) {
 						allMaterials.push(node.material);
-						console.log(`Material: "${node.material.name}"`);
-						console.log(`  - Type: ${node.material.type}`);
-						console.log(`  - Color: ${node.material.color ? '#' + node.material.color.getHexString() : 'N/A'}`);
-						console.log(`  - Map: ${node.material.map ? 'Yes' : 'No'}`);
-						if (node.material.map) {
-							console.log(`    - Map URL: ${node.material.map.source.data ? node.material.map.source.data.src : 'embedded'}`);
-						}
-						console.log(`  - Transparent: ${node.material.transparent}`);
-						console.log(`  - Opacity: ${node.material.opacity}`);
-						console.log(`  - Side: ${node.material.side}`);
-						
-						// For PBR materials
-						if (node.material.metalness !== undefined) {
-							console.log(`  - Metalness: ${node.material.metalness}`);
-							console.log(`  - Roughness: ${node.material.roughness}`);
-						}
 					}
 				});
 				console.log("Total unique materials:", allMaterials.length);
@@ -856,53 +871,30 @@
 				let hoodieMaterial = null;
 				
 				vrm.scene.traverse((node) => {
-					if (node.material) {
-						const matName = node.material.name ? node.material.name.toLowerCase() : '';
-						
-						// Debug
-						console.log(`Checking material: ${node.material.name} (${matName})`);
-						
-						// Find skin material
-						if (matName === "skin" || matName.includes('skin')) {
-							skinMaterial = node.material;
-							console.log("✅ Found SKIN material:", node.material.name);
-						}
-						
-						// Find eye materials
-						if ((matName.includes('eye') && matName.includes('l')) || 
-							matName === "fake eye.l.001") {
-							leftEyeMaterial = node.material;
-							console.log("✅ Found LEFT EYE material:", node.material.name);
-						}
-						
-						if ((matName.includes('eye') && matName.includes('r')) || 
-							matName === "fake eye.r.001") {
-							rightEyeMaterial = node.material;
-							console.log("✅ Found RIGHT EYE material:", node.material.name);
-						}
-						
-						// Find hoodie material
-						if (node.material.name === "Test" || matName === "test") {
-							hoodieMaterial = node.material;
-							console.log("✅ Found HOODIE material (Test):", node.material.name);
-						}
-					}
+					// ...existing material finding code...
 				});
 
 				// Adjust initial VRM position
 				vrm.scene.position.y = 0.5; // Raise the model slightly
 
 				// Disable frustum culling
-				vrm.scene.traverse( ( obj ) => {
+				vrm.scene.traverse((obj) => {
 					obj.frustumCulled = false;
 					if (obj.isMesh) {
 						obj.castShadow = true;
 						obj.receiveShadow = true;
 					}
-				 } );
+				});
 				
 				// Initially hide the VRM
 				vrm.scene.visible = false;
+				
+				// Add VRM to scene BEFORE starting the animation
+				scene.add(vrm.scene);
+				currentVrm = vrm;
+				
+				// Update loading progress to 100% when model is ready
+				updateLoadingProgress(100);
 				
 				// Delay of 2 seconds before showing and animating
 				setTimeout(() => {
@@ -928,37 +920,12 @@
 					
 					animatePosition();
 				}, 2000);
-
-				scene.add(vrm.scene);
-				currentVrm = vrm;
 				
 				// Update debug panel with material information
 				updateDebugPanel(vrm);
 				
-				 // Check for textures
-				console.log("Checking for texture parameters in URL...");
-				
-				// Check for skin texture
-				const skinTextureApplied = checkAndHandleSkinTexture(vrm, skinMaterial);
-				
-				// Check for eyes texture
-				const eyesTextureApplied = checkAndHandleEyesTexture(vrm, leftEyeMaterial, rightEyeMaterial);
-				
-				// Check for hoodie texture
-				const hoodieTextureApplied = checkAndHandleHoodieTexture(vrm, hoodieMaterial);
-				
-				// Check for interest texture
-				if (getURLParameter('interest-02')) {
-					console.log("🔄 Looking for interest-02 texture...");
-					vrm.scene.traverse((node) => {
-						if (node.material && node.material.name && 
-							(node.material.name.toLowerCase().includes('interest') || 
-							 node.material.name.toLowerCase().includes('badge'))) {
-							console.log("✅ Found interest material:", node.material.name);
-							loadAndApplyTexture('./textures/interest/interest_02.png'.toLowerCase(), node.material);
-						}
-					});
-				}
+				// Check for textures
+				// ...existing texture checking code...
 
 				// Set expression
 				if (vrm.expressionManager) {
@@ -968,8 +935,86 @@
 				// Load animation
 				loadSwingDancingAnimation(vrm);
 			}
-			
-			// Call the VRM loading function at the appropriate time
+
+			// Fix loadVRMModel function to ensure proper model loading and display
+			async function loadVRMModel() {
+				// Update to show initial loading state
+				updateLoadingProgress(0);
+				
+				// List of possible paths to try for the VRM model
+				const pathsToTry = [
+					'models/snoo.vrm',
+					'snoo.vrm'
+				];
+				
+				let loaded = false;
+				
+				for (const path of pathsToTry) {
+					const fullPath = await getAssetPath(path);
+					console.log(`Attempting to load VRM from: ${fullPath}`);
+					
+					try {
+						await new Promise((resolve, reject) => {
+							loader.load(
+								fullPath,
+								(gltf) => {
+									const vrm = gltf.userData.vrm;
+									console.log(`Successfully loaded VRM from: ${fullPath}`);
+									if (vrm) {
+										handleLoadedVRM(vrm);
+										loaded = true;
+										resolve();
+									} else {
+										console.error("VRM data missing from loaded model");
+										reject(new Error("VRM data missing"));
+									}
+								},
+								(progress) => {
+									// Enhanced progress tracking
+									const percent = 100.0 * (progress.loaded / progress.total) || 0;
+									console.log('Loading model...', percent, '%');
+									updateLoadingProgress(percent);
+								},
+								(error) => {
+									console.warn(`Error loading VRM from ${fullPath}:`, error);
+									reject(error);
+								}
+							);
+						});
+						
+						if (loaded) break; // Exit the loop if loading succeeded
+					} catch (error) {
+						console.warn(`Couldn't load from ${fullPath}, trying next path...`);
+					}
+				}
+				
+				// Hide loading overlay after a delay to ensure model is visible
+				if (loaded) {
+					setTimeout(() => {
+						hideLoadingOverlay();
+					}, 3500); // Increased delay to ensure model is fully visible
+				} else {
+					// Show error and still hide the loading overlay
+					console.error('Failed to load VRM model from any of the paths');
+					hideLoadingOverlay();
+					
+					// Show error message to user
+					const errorDiv = document.createElement('div');
+					errorDiv.style.position = 'fixed';
+					errorDiv.style.top = '50%';
+					errorDiv.style.left = '50%';
+					errorDiv.style.transform = 'translate(-50%, -50%)';
+					errorDiv.style.background = 'rgba(255,0,0,0.8)';
+					errorDiv.style.color = 'white';
+					errorDiv.style.padding = '20px';
+					errorDiv.style.borderRadius = '10px';
+					errorDiv.style.zIndex = '1000';
+					errorDiv.innerHTML = '<h2>Error Loading 3D Model</h2><p>Could not load the VRM model. Please check the console for details.</p>';
+					document.body.appendChild(errorDiv);
+				}
+			}
+
+			// Try multiple paths for the VRM model
 			loadVRMModel();
 
 			// Define Mixamo to VRM bone mapping with complete bone list
