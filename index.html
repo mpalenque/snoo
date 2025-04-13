@@ -480,9 +480,6 @@
 		
 		 <!-- Share button - positioned above footer -->
 		<div class="share-container">
-			<p style="color: #1A1A1B; margin-bottom: 15px; font-family: Arial, sans-serif; font-size: 16px;">
-				Hey! Watch my Snoo and my interests!
-			</p>
 			<button id="share-button" title="Share this Snoo">
 				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
 					<path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
@@ -1542,9 +1539,10 @@
 					shareButton.addEventListener('click', function() {
 						// Get the current URL with all parameters
 						const currentUrl = window.location.href;
+						const shareText = `Hey! Watch my Snoo and my interests!\n${currentUrl}`;
 						
 						// Try to copy to clipboard
-						navigator.clipboard.writeText(currentUrl).then(function() {
+						navigator.clipboard.writeText(shareText).then(function() {
 							// Success
 							shareMessage.textContent = 'Copied!';
 							shareMessage.className = 'success-message';
@@ -1559,7 +1557,7 @@
 							
 							// Create a temporary input element
 							const tempInput = document.createElement('input');
-							tempInput.value = currentUrl;
+							tempInput.value = shareText;
 							document.body.appendChild(tempInput);
 							
 							// Select and copy
@@ -1571,11 +1569,11 @@
 									shareMessage.textContent = 'Copied!';
 									shareMessage.className = 'success-message';
 								} else {
-									shareMessage.textContent = currentUrl;
+									shareMessage.textContent = shareText;
 									shareMessage.className = 'error-message';
 								}
 							} catch (e) {
-								shareMessage.textContent = 'No se pudo copiar: ' + currentUrl;
+								shareMessage.textContent = 'Could not copy message';
 								shareMessage.className = 'error-message';
 							}
 							
@@ -1630,3 +1628,4 @@
 		</script>
 	</body>
 </html>
+``` 
