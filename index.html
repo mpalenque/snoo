@@ -8,6 +8,13 @@
 			name="viewport"
 			content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
 		/>
+		 <!-- Meta tags para preview -->
+		<meta property="og:title" content="My Reddit Snoo Avatar" />
+		<meta property="og:description" content="Check out my customized Reddit Snoo and my interests!" />
+		<meta property="og:image" content="https://mpalenque.github.io/snoo/preview.jpg" />
+		<meta property="og:url" content="https://mpalenque.github.io/snoo/" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="description" content="Interactive 3D Reddit Snoo Avatar Viewer" />
 		<style>
 			body {
 				margin: 0;
@@ -31,6 +38,9 @@
 			.header img {
 				max-width: 45%; /* Reduced from 90% to 45% */
 				height: auto;
+				opacity: 0;
+				animation: slideInFromTop 1s ease-out forwards, bounceHeader 0.5s ease-out 1s forwards;
+				transform: translateY(-100%);
 			}
 			
 			/* New styles for subreddit grid */
@@ -68,10 +78,9 @@
 				height: 60px; /* Fixed exact height - no max-height */
 				width: auto; /* Let width adjust based on aspect ratio */
 				object-fit: scale-down; /* Scale down to fit container without distortion */
-				animation: bobAnimation 3s ease-in-out infinite,
-				         slideIn 1s ease-out forwards;
 				opacity: 0;
 				transform: translateX(-100px);
+				animation: slideInAndBounce 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 			}
 			
 			 /* Responsive adjustments */
@@ -149,11 +158,11 @@
 			}
 			
 			/* Add delay for each subreddit item */
-			.subreddit-row a:nth-child(1) img { animation-delay: 0s, 0.2s; }
-			.subreddit-row a:nth-child(2) img { animation-delay: 0s, 0.4s; }
-			.subreddit-row a:nth-child(3) img { animation-delay: 0s, 0.6s; }
-			.subreddit-row a:nth-child(4) img { animation-delay: 0s, 0.8s; }
-			.subreddit-row a:nth-child(5) img { animation-delay: 0s, 1.0s; }
+			.subreddit-row a:nth-child(1) img { animation-delay: 0.2s; }
+			.subreddit-row a:nth-child(2) img { animation-delay: 0.3s; }
+			.subreddit-row a:nth-child(3) img { animation-delay: 0.4s; }
+			.subreddit-row a:nth-child(4) img { animation-delay: 0.5s; }
+			.subreddit-row a:nth-child(5) img { animation-delay: 0.6s; }
 			
 			.footer {
 				width: 100%;
@@ -164,6 +173,9 @@
 				bottom: 0; /* Always at bottom */
 				left: 0;
 				z-index: 100;
+				opacity: 0;
+				transform: translateY(100%);
+				animation: slideInFromBottom 0.6s ease-out 0.3s forwards;
 			}
 			.footer img {
 				max-width: 45%; /* Reduced from 90% to 45% */
@@ -241,6 +253,81 @@
 				padding-bottom: 5px;
 			}
 
+			 /* Share button styles */
+			.share-container {
+				position: fixed;
+				bottom: 70px;
+				width: 100%;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				z-index: 101;
+				opacity: 0;
+				transform: translateY(50px);
+				animation: slideInFromBottomWithBounce 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s forwards;
+			}
+			
+			#share-button {
+				background-color: #FF4500; /* Reddit orange */
+				color: white;
+				border: none;
+				border-radius: 25px;
+				padding: 10px 20px;
+				font-size: 16px;
+				font-family: Arial, sans-serif;
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+				transition: all 0.3s ease;
+			}
+			
+			#share-button:hover {
+				background-color: #FF6A33;
+				transform: translateY(-2px);
+				box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+			}
+			
+			#share-button:active {
+				transform: translateY(0);
+				box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+			}
+			
+			#share-message {
+				font-family: Arial, sans-serif;
+				font-size: 14px;
+				margin-top: 8px;
+				padding: 5px 10px;
+				border-radius: 4px;
+				opacity: 0;
+				transition: opacity 0.5s ease;
+			}
+			
+			.success-message {
+				background-color: #43A047;
+				color: white;
+				opacity: 1 !important;
+			}
+			
+			.error-message {
+				background-color: #E53935;
+				color: white;
+				opacity: 1 !important;
+			}
+
+			/* Media query for smaller screens */
+			@media screen and (max-width: 768px) {
+				.share-container {
+					bottom: 60px;
+				}
+				
+				#share-button {
+					font-size: 14px;
+					padding: 8px 16px;
+				}
+			}
+
 			/* Loading overlay styles */
 			#loading-overlay {
 				position: fixed;
@@ -248,7 +335,7 @@
 				left: 0;
 				width: 100%;
 				height: 100%;
-				background-color: rgba(237, 239, 241, 0.9);
+				background-color: transparent;
 				display: flex;
 				flex-direction: column;
 				justify-content: center;
@@ -292,6 +379,56 @@
 				height: 100%;
 				background-color: #FF4500; /* Reddit orange */
 				transition: width 0.3s ease;
+			}
+
+			/* Nuevas animaciones */
+			@keyframes slideInFromTop {
+				to {
+					transform: translateY(0);
+					opacity: 1;
+				}
+			}
+
+			@keyframes bounceHeader {
+				0%, 100% { transform: translateY(0); }
+				50% { transform: translateY(-10px); }
+			}
+
+			@keyframes slideInAndBounce {
+				0% {
+					transform: translateX(-100px);
+					opacity: 0;
+				}
+				70% {
+					transform: translateX(10px);
+					opacity: 1;
+				}
+				100% {
+					transform: translateX(0);
+					opacity: 1;
+				}
+			}
+
+			@keyframes slideInFromBottom {
+				to {
+					transform: translateY(0);
+					opacity: 1;
+				}
+			}
+
+			@keyframes slideInFromBottomWithBounce {
+				0% {
+					transform: translateY(50px);
+					opacity: 0;
+				}
+				70% {
+					transform: translateY(-10px);
+					opacity: 1;
+				}
+				100% {
+					transform: translateY(0);
+					opacity: 1;
+				}
 			}
 		</style>
 	</head>
@@ -339,6 +476,20 @@
 		<div id="debug-panel">
 			<h3>VRM Materials</h3>
 			<div id="material-list"></div>
+		</div>
+		
+		 <!-- Share button - positioned above footer -->
+		<div class="share-container">
+			<p style="color: #1A1A1B; margin-bottom: 15px; font-family: Arial, sans-serif; font-size: 16px;">
+				Hey! Watch my Snoo and my interests!
+			</p>
+			<button id="share-button" title="Share this Snoo">
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+					<path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
+				</svg>
+				Share this Snoo
+			</button>
+			<span id="share-message"></span>
 		</div>
 		
 		<!-- Footer with footer image - positioned at bottom -->
@@ -1381,6 +1532,64 @@
 
 			// animate
 			const clock = new THREE.Clock();
+
+			// Share button functionality
+			document.addEventListener('DOMContentLoaded', function() {
+				const shareButton = document.getElementById('share-button');
+				const shareMessage = document.getElementById('share-message');
+				
+				if (shareButton) {
+					shareButton.addEventListener('click', function() {
+						// Get the current URL with all parameters
+						const currentUrl = window.location.href;
+						
+						// Try to copy to clipboard
+						navigator.clipboard.writeText(currentUrl).then(function() {
+							// Success
+							shareMessage.textContent = 'Copied!';
+							shareMessage.className = 'success-message';
+							
+							// Hide the message after 3 seconds
+							setTimeout(function() {
+								shareMessage.style.opacity = '0';
+							}, 3000);
+						}, function(err) {
+							// Error - fallback method
+							console.error('Could not copy text: ', err);
+							
+							// Create a temporary input element
+							const tempInput = document.createElement('input');
+							tempInput.value = currentUrl;
+							document.body.appendChild(tempInput);
+							
+							// Select and copy
+							tempInput.select();
+							
+							try {
+								const success = document.execCommand('copy');
+								if (success) {
+									shareMessage.textContent = 'Copied!';
+									shareMessage.className = 'success-message';
+								} else {
+									shareMessage.textContent = currentUrl;
+									shareMessage.className = 'error-message';
+								}
+							} catch (e) {
+								shareMessage.textContent = 'No se pudo copiar: ' + currentUrl;
+								shareMessage.className = 'error-message';
+							}
+							
+							// Remove the temporary element
+							document.body.removeChild(tempInput);
+							
+							// Hide the message after 3 seconds
+							setTimeout(function() {
+								shareMessage.style.opacity = '0';
+							}, 3000);
+						});
+					});
+				}
+			});
 
 			function animate() {
 				requestAnimationFrame(animate);
