@@ -54,11 +54,12 @@
 				margin-bottom: 40px; /* Add space after header */
 			}
 			.header img {
-				max-width: 45%; /* Reduced from 90% to 45% */
+				max-width: 22.5%; /* Reduced from 45% to 22.5% (50% smaller) */
 				height: auto;
 				opacity: 0;
 				animation: slideInFromTop 1s ease-out forwards, bounceHeader 0.5s ease-out 1s forwards;
 				transform: translateY(-100%);
+				margin-top: 20px; /* Lowered the image by 20px */
 			}
 			
 			/* New styles for subreddit grid */
@@ -185,8 +186,7 @@
 			.footer {
 				width: 100%;
 				text-align: center;
-				padding: 10px 0;
-				background-color: white;
+ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 				position: fixed; /* Fixed to viewport */
 				bottom: 0; /* Always at bottom */
 				left: 0;
@@ -194,10 +194,15 @@
 				opacity: 0;
 				transform: translateY(100%);
 				animation: slideInFromBottom 0.6s ease-out 0.3s forwards;
+				background-color: transparent; /* Changed from white to transparent */
+				line-height: 0; /* Remove any line-height spacing */
 			}
 			.footer img {
 				max-width: 45%; /* Reduced from 90% to 45% */
 				height: auto;
+				display: block; /* Changed to block to remove inline spacing */
+				margin: 0 auto; /* Center horizontally */
+				vertical-align: bottom; /* Ensure image aligns at bottom */
 			}
 			#canvas-container {
 				position: absolute;
@@ -1019,6 +1024,14 @@
 
 			// Function to handle the loaded VRM model - fixing issue with missing VRM display
 			function handleLoadedVRM(vrm) {
+				// Debug: Log all material names in the VRM model
+				console.log("Materials in VRM model:");
+				vrm.scene.traverse((node) => {
+					if (node.material) {
+						console.log(`Material Name: ${node.material.name || 'Unnamed'}`);
+					}
+				});
+
 				// Debug - Print all materials in the model with more detail
 				console.log("=========== DEBUG: ALL MATERIALS ===========");
 				const allMaterials = [];
@@ -1028,10 +1041,6 @@
 						console.log(`Material: "${node.material.name}"`);
 						console.log(`  - Type: ${node.material.type}`);
 						console.log(`  - Color: ${node.material.color ? '#' + node.material.color.getHexString() : 'N/A'}`);
-						console.log(`  - Map: ${node.material.map ? 'Yes' : 'No'}`);
-						if (node.material.map) {
-							console.log(`    - Map URL: ${node.material.map.source.data ? node.material.map.source.data.src : 'embedded'}`);
-						}
 						console.log(`  - Transparent: ${node.material.transparent}`);
 						console.log(`  - Opacity: ${node.material.opacity}`);
 						console.log(`  - Side: ${node.material.side}`);
@@ -1106,7 +1115,6 @@
 				currentVrm = vrm;
 				
 				// Update loading progress to 100% when model is ready
-				updateLoadingProgress(100);
 				
 				// Delay of 2 seconds before showing and animating
 				setTimeout(() => {
@@ -1177,8 +1185,8 @@
 				
 				// List of possible paths to try for the VRM model
 				const pathsToTry = [
-					'models/snoo.vrm',
-					'snoo.vrm'
+					'models/finalsnoo.vrm', // Updated to finalsnoo.vrm
+					'finalsnoo.vrm'        // Updated to finalsnoo.vrm
 				];
 				
 				let loaded = false;
