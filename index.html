@@ -243,40 +243,81 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 				font-family: monospace;
 				font-size: 12px;
 				max-width: 300px;
-				max-height: 400px;
+				max-height: 80vh;
 				overflow-y: auto;
 				z-index: 1000;
-				display: none; /* Hide debug panel permanently */
+				display: none; /* Changed from block to none to hide debug panel */
+				border: 1px solid #444;
 			}
-			
+
 			#debug-panel h3 {
 				margin-top: 0;
 				margin-bottom: 10px;
 				font-size: 14px;
 				border-bottom: 1px solid #ccc;
 				padding-bottom: 5px;
+				text-align: center;
 			}
-			
-			#debug-panel ul {
-				margin: 0;
-				padding-left: 20px;
+
+			#debug-panel .debug-button {
+				background-color: #555;
+				color: white;
+				border: none;
+				padding: 5px 8px;
+				margin: 5px;
+				border-radius: 3px;
+				cursor: pointer;
 			}
-			
-			#debug-panel li {
-				margin-bottom: 5px;
+
+			#debug-panel .debug-button:hover {
+				background-color: #777;
 			}
-			
-			#toggle-debug {
-				display: none;
+
+			#material-list {
+				margin-bottom: 15px;
 			}
-			
+
 			.material-info {
 				margin-bottom: 10px;
 				border-bottom: 1px dotted #666;
 				padding-bottom: 5px;
 			}
 
-			 /* Share button styles */
+			.texture-info {
+				margin-left: 10px;
+				color: #aaa;
+			}
+
+			.material-name {
+				font-weight: bold;
+				color: #ffcc00;
+			}
+
+			.texture-name {
+				color: #88ccff;
+			}
+
+			.toggle-container {
+				display: flex;
+				justify-content: space-between;
+				margin-bottom: 10px;
+			}
+
+			#toggle-debug {
+				position: fixed;
+				top: 10px;
+				right: 10px;
+				z-index: 1001;
+				background-color: rgba(0, 0, 0, 0.5);
+				color: white;
+				border: none;
+				padding: 5px 10px;
+				border-radius: 3px;
+				cursor: pointer;
+				display: block;
+			}
+
+			/* Share button styles */
 			.share-container {
 				position: fixed;
 				bottom: 70px;
@@ -376,9 +417,10 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 			}
 			
 			#loading-text {
-				font-family: Arial, sans-serif;
+				font-family: Verdana, Arial, sans-serif; /* Font oficial de Reddit */
 				font-size: 18px;
-				color: #1A1A1B; /* Reddit dark */
+				color: #FF4500; /* Color naranja de Reddit */
+				font-weight: 600; /* Semi-bold */
 				margin-top: 10px;
 			}
 			
@@ -502,7 +544,7 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 		<div class="share-container">
 			<button id="share-button" title="Share this Snoo">
 				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-					<path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
+					<path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5zm-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
 				</svg>
 				Share this Snoo
 			</button>
@@ -1008,8 +1050,6 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 				if (loadingText) {
 					if (percent < 100) {
 						loadingText.textContent = `Loading Snoo model... ${Math.round(percent)}%`;
-					} else {
-						loadingText.textContent = 'Preparing Snoo...';
 					}
 				}
 			}
@@ -1089,10 +1129,13 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 							console.log("✅ Found RIGHT EYE material:", node.material.name);
 						}
 						
-						// Find hoodie material
-						if (node.material.name === "Test" || matName === "test") {
+						// Find hoodie material - Updated to include the correct material name
+						if (node.material.name === "Test" || 
+							matName === "test" || 
+							node.material.name === "09-Golden Yellow #FFBF0B GFAR.001" || 
+							matName.includes("golden yellow")) {
 							hoodieMaterial = node.material;
-							console.log("✅ Found HOODIE material (Test):", node.material.name);
+							console.log("✅ Found HOODIE material:", node.material.name);
 						}
 					}
 				});
@@ -1112,7 +1155,6 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 				// Initially hide the VRM
 				vrm.scene.visible = false;
 				
-				// Add VRM to scene BEFORE starting the animation
 				scene.add(vrm.scene);
 				currentVrm = vrm;
 				
@@ -1666,3 +1708,4 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 		<script src="floating-interests.js"></script>
 	</body>
 </html>
+`
