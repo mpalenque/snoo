@@ -367,27 +367,27 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 				transition: opacity 0.5s ease-out;
 			}
 			
-			.spinner {
-				border: 5px solid #f3f3f3;
-				border-top: 5px solid #FF4500; /* Reddit orange */
-				border-radius: 50%;
-				width: 50px;
-				height: 50px;
-				animation: spin 1s linear infinite;
+			#reddit-loading-image {
+				width: auto;
+				height: 120px; /* Tamaño fijo para la imagen */
+				opacity: 0.4; /* Comienza con 60% de transparencia */
+				transition: opacity 0.3s ease-in-out;
 				margin-bottom: 20px;
-			}
-			
-			@keyframes spin {
-				0% { transform: rotate(0deg); }
-				100% { transform: rotate(360deg); }
 			}
 			
 			#loading-text {
 				font-family: Arial, sans-serif;
 				font-size: 18px;
 				color: #1A1A1B; /* Reddit dark */
+				margin-top: 10px;
 			}
 			
+			@keyframes pulse {
+				0% { transform: scale(1); }
+				50% { transform: scale(1.05); }
+				100% { transform: scale(1); }
+			}
+
 			#loading-progress {
 				width: 250px;
 				height: 10px;
@@ -459,11 +459,8 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 	<body>
 		<!-- Add loading overlay at the beginning of the body -->
 		<div id="loading-overlay">
-			<div class="spinner"></div>
+			<img id="reddit-loading-image" src="./reddit.png" alt="Reddit Loading">
 			<div id="loading-text">Loading Snoo model...</div>
-			<div id="loading-progress">
-				<div id="progress-bar"></div>
-			</div>
 		</div>
 
 		<!-- Header with welcome image -->
@@ -996,11 +993,16 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 
 			// Add this function at the beginning of the script to update the loading progress
 			function updateLoadingProgress(percent) {
-				const progressBar = document.getElementById('progress-bar');
+				const loadingImage = document.getElementById('reddit-loading-image');
 				const loadingText = document.getElementById('loading-text');
 				
-				if (progressBar) {
-					progressBar.style.width = `${percent}%`;
+				if (loadingImage) {
+					// Calcular la opacidad basada en el porcentaje (de 0.4 a 1)
+					const opacity = 0.4 + (percent * 0.6 / 100);
+					loadingImage.style.opacity = opacity;
+					
+					// Añadir animación de pulso durante la carga
+					loadingImage.style.animation = 'pulse 1.5s infinite ease-in-out';
 				}
 				
 				if (loadingText) {
@@ -1115,31 +1117,38 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 				currentVrm = vrm;
 				
 				// Update loading progress to 100% when model is ready
+				updateLoadingProgress(100);
 				
-				// Delay of 2 seconds before showing and animating
+				// Primero ocultar el loading overlay y luego mostrar el VRM con un retraso
 				setTimeout(() => {
-					vrm.scene.visible = true;
-					vrm.scene.position.y = -5;
+					// Ocultar completamente el overlay de carga
+					hideLoadingOverlay();
 					
-					const duration = 1.5;
-					const startTime = Date.now();
-					
-					function animatePosition() {
-						const now = Date.now();
-						const elapsed = (now - startTime) / 1000;
+					// Esperar a que el overlay desaparezca antes de mostrar el VRM
+					setTimeout(() => {
+						vrm.scene.visible = true;
+						vrm.scene.position.y = -5;
 						
-						if (elapsed < duration) {
-							const progress = elapsed / duration;
-							const easeOut = 1 - Math.pow(1 - progress, 3);
-							vrm.scene.position.y = -5 + (5 * easeOut);
-							requestAnimationFrame(animatePosition);
-						} else {
-							vrm.scene.position.y = 0;
+						const duration = 1.5;
+						const startTime = Date.now();
+						
+						function animatePosition() {
+							const now = Date.now();
+							const elapsed = (now - startTime) / 1000;
+							
+							if (elapsed < duration) {
+								const progress = elapsed / duration;
+								const easeOut = 1 - Math.pow(1 - progress, 3);
+								vrm.scene.position.y = -5 + (5 * easeOut);
+								requestAnimationFrame(animatePosition);
+							} else {
+								vrm.scene.position.y = 0;
+							}
 						}
-					}
-					
-					animatePosition();
-				}, 2000);
+						
+						animatePosition();
+					}, 600); // Esperar 600ms para que el overlay desaparezca completamente
+				}, 1500); // Mostrar "Preparing Snoo" durante 1.5 segundos
 				
 				// Update debug panel with material information
 				updateDebugPanel(vrm);
@@ -1232,9 +1241,11 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 				
 				// Hide loading overlay after a delay to ensure model is visible
 				if (loaded) {
-					setTimeout(() => {
-						hideLoadingOverlay();
-					}, 3500); // Increased delay to ensure model is fully visible
+					// Removemos este código porque ahora el hideLoadingOverlay se maneja
+					// directamente en la función handleLoadedVRM
+					// setTimeout(() => {
+					//    hideLoadingOverlay();
+					// }, 3500);
 				} else {
 					// Show error and still hide the loading overlay
 					console.error('Failed to load VRM model from any of the paths');
