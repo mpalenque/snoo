@@ -59,7 +59,19 @@
 				opacity: 0;
 				animation: slideInFromTop 1s ease-out forwards, bounceHeader 0.5s ease-out 1s forwards;
 				transform: translateY(-100%);
-				margin-top: 20px; /* Lowered the image by 20px */
+				margin-top: 30px; /* Increased from 20px to 30px */
+				margin-left: auto; /* Center horizontally */
+				margin-right: auto; /* Center horizontally */
+			}
+			
+			#welcome-img {
+				display: block;
+			}
+			
+			#meet-img {
+				display: none;
+				opacity: 0;
+				transform: translateY(-20px);
 			}
 			
 			/* New styles for subreddit grid */
@@ -97,9 +109,13 @@
 				height: 60px; /* Fixed exact height - no max-height */
 				width: auto; /* Let width adjust based on aspect ratio */
 				object-fit: scale-down; /* Scale down to fit container without distortion */
-				opacity: 0;
+				opacity: 0; /* Start invisible */
 				transform: translateX(-100px);
-				animation: slideInAndBounce 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+			}
+			
+			/* Add a new class for controlled animations */
+			.animate-subreddit {
+				animation: slideInAndBounce 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 			}
 			
 			 /* Responsive adjustments */
@@ -122,8 +138,9 @@
 				}
 				
 				.subreddit-item {
-					height: 50px; /* Smaller height on mobile */
-					max-width: 250px; /* Smaller max-width on mobile */
+					height: 30px; /* Reduced to half size from 60px */
+					width: auto; /* Maintain aspect ratio */
+					max-width: none; /* Remove max-width constraint */
 				}
 			}
 			
@@ -143,14 +160,14 @@
 				
 				.subreddit-row a {
 					width: auto; /* Auto width based on content */
-					max-width: 150px; /* Half width compared to desktop */
-					height: 30px; /* Half of desktop height (60px) */
+					height: 30px; /* Reduced to half size from 60px */
 					margin-bottom: 10px;
 				}
 				
 				.subreddit-item {
-					height: 30px; /* Half of desktop height */
-					max-width: 150px; /* Half of desktop max-width */
+					height: 30px; /* Reduced to half size from 60px */
+					width: auto; /* Maintain aspect ratio */
+					max-width: none; /* Remove max-width constraint */
 				}
 				
 				/* Reduce bobbing animation on mobile for better performance */
@@ -461,11 +478,11 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 
 			@keyframes slideInAndBounce {
 				0% {
-					transform: translateX(-100px);
+					transform: translateX(-50px);
 					opacity: 0;
 				}
 				70% {
-					transform: translateX(10px);
+					transform: translateX(5px);
 					opacity: 1;
 				}
 				100% {
@@ -497,10 +514,15 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 				}
 			@media screen and (max-width: 768px) {
 				.header img {
-					max-width: 8.25%; /* Reduced to 1/3 of 24.75% */
+					max-width: 49.5%; /* Doubled from 24.75% */
 				}
 				.footer img {
 					max-width: 90%; /* Doubled from 45% */
+				}
+				.subreddit-item {
+					height: 30px; /* Reduced to half size from 60px */
+					width: auto; /* Maintain aspect ratio */
+					max-width: none; /* Remove max-width constraint */
 				}
 			}
 		</style>
@@ -513,9 +535,10 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 			<div id="loading-text">Loading Snoo model...</div>
 		</div>
 
-		<!-- Header with welcome image -->
+		<!-- Header with welcome and meet images -->
 		<div class="header">
 			<img src="./welcome.png" alt="Welcome" id="welcome-img">
+			<img src="./meet.png" alt="Meet" id="meet-img">
 		</div>
 		
 		 <!-- Subreddit grid with corrected paths in lowercase -->
@@ -1064,10 +1087,36 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 			
 			function hideLoadingOverlay() {
 				const overlay = document.getElementById('loading-overlay');
+				const welcomeImg = document.getElementById('welcome-img');
+				const meetImg = document.getElementById('meet-img');
+				
 				if (overlay) {
 					overlay.style.opacity = '0';
 					setTimeout(() => {
 						overlay.style.display = 'none';
+						
+						// Hide welcome image and show meet image
+						welcomeImg.style.display = 'none';
+						meetImg.style.display = 'block';
+						
+						// Animate the meet image
+						setTimeout(() => {
+							meetImg.style.transition = 'opacity 0.5s, transform 0.8s';
+							meetImg.style.opacity = '1';
+							meetImg.style.transform = 'translateY(0)';
+							
+							// Wait for meet.png animation to complete before animating subreddits
+							setTimeout(() => {
+								// Get all subreddit items and animate them with staggered delays
+								const subredditItems = document.querySelectorAll('.subreddit-item');
+								subredditItems.forEach((item, index) => {
+									setTimeout(() => {
+										item.classList.add('animate-subreddit');
+									}, 100 * index); // Stagger by 100ms per item
+								});
+							}, 600); // Wait 600ms after meet.png starts animating
+							
+						}, 100);
 					}, 500);
 				}
 			}
@@ -1716,4 +1765,3 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 		<script src="floating-interests.js"></script>
 	</body>
 </html>
-``` 
