@@ -867,7 +867,7 @@ function loadSwingDancingAnimation(vrm) {
     currentMixer = new THREE.AnimationMixer(vrm.scene);
     
     console.log('Trying direct animation loading approach...');
-    loadMixamoAnimation('./dance.fbx'.toLowerCase(), vrm)
+    loadMixamoAnimation('./snooPointing.fbx'.toLowerCase(), vrm)
         .then((clip) => {
             const action = currentMixer.clipAction(clip);
             action.timeScale = 0.8;
@@ -881,18 +881,18 @@ function loadSwingDancingAnimation(vrm) {
             // Determine if we're on GitHub Pages
             const isGitHubPages = window.location.hostname === 'mpalenque.github.io';
             
-            // Array of possible paths to try in order - MODIFIED TO USE DANCE.FBX in lowercase
+            // Array of possible paths to try in order - MODIFIED TO USE SNOOPOINTING.FBX in lowercase
             const pathsToTry = isGitHubPages ? [
-                '/snoo/models/dance.fbx'.toLowerCase(),
-                '/snoo/models/dance.fbx'.toLowerCase(),
-                '/snoo/dance.fbx'.toLowerCase(),
-                 '/snoo/dance.fbx'.toLowerCase()
+                '/snoo/models/snooPointing.fbx'.toLowerCase(),
+                '/snoo/models/snoopointing.fbx'.toLowerCase(),
+                '/snoo/snooPointing.fbx'.toLowerCase(),
+                '/snoo/snoopointing.fbx'.toLowerCase()
             ] : [
-                'models/dance.fbx'.toLowerCase(),
-                 './models/dance.fbx'.toLowerCase(),
-                 '../models/dance.fbx'.toLowerCase(),
-                 'dance.fbx'.toLowerCase(),
-                 './dance.fbx'.toLowerCase()
+                'models/snooPointing.fbx'.toLowerCase(),
+                './models/snooPointing.fbx'.toLowerCase(),
+                '../models/snooPointing.fbx'.toLowerCase(),
+                'snooPointing.fbx'.toLowerCase(),
+                './snooPointing.fbx'.toLowerCase()
             ];
 
             console.log('Trying alternative paths:', pathsToTry);
