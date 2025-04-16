@@ -122,7 +122,7 @@ function getImageFilename(folderPath, index) {
 function createSubredditButtons() {
     console.log('createSubredditButtons started');
     
-    // Crear o obtener el contenedor de subreddits
+    // Create or get the subreddit container
     let container = document.querySelector('.subreddit-row');
     if (!container) {
         container = document.createElement('div');
@@ -130,10 +130,10 @@ function createSubredditButtons() {
         document.querySelector('.subreddit-grid').appendChild(container);
     }
 
-    // Limpiar el contenedor
+    // Clear the container
     container.innerHTML = '';
 
-    // Buscar el parámetro de interés en la URL
+    // Look for the interest parameter in the URL
     const params = new URLSearchParams(window.location.search);
     let foundInterest = null;
     
@@ -153,19 +153,19 @@ function createSubredditButtons() {
     const folderName = interestFolders[foundInterest];
     console.log('Loading from folder:', folderName);
     
-    // Crear botones para cada subreddit
+    // Create buttons for each subreddit
     for (let i = 1; i <= 5; i++) {
         const link = document.createElement('a');
         const img = document.createElement('img');
         
-        // Configurar la imagen
+        // Configure the image
         img.className = 'subreddit-item';
         
-        // Obtener el nombre del subreddit
+        // Get the subreddit name
         const subredditName = getImageFilename(folderName, i);
         if (!subredditName) continue;
 
-        // Configurar la imagen y el enlace
+        // Configure the image and link
         img.alt = subredditName;
         img.src = `./Subreddits 4x/${folderName}/${i} ${subredditName}.png`;
         link.href = `https://www.reddit.com/r/${subredditName}`;
@@ -176,7 +176,7 @@ function createSubredditButtons() {
     }
 }
 
-// Inicializar cuando el DOM esté listo
+// Initialize when the DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', createSubredditButtons);
 } else {
