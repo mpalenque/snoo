@@ -339,7 +339,7 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 				position: fixed;
 				bottom: 70px;
 				width: 100%;
-				display: flex;
+				display: none; /* Changed from flex to none to hide the button */
 				flex-direction: column;
 				align-items: center;
 				z-index: 101;
@@ -584,7 +584,7 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 		
 		<!-- Footer with footer image - positioned at bottom -->
 		<div class="footer">
-			<img src="./footer.png" alt="Footer" id="footer-img">
+			<img src="./footer2.png" alt="Footer" id="footer-img">
 		</div>
 
 		<script type="importmap">
@@ -1087,36 +1087,15 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 			
 			function hideLoadingOverlay() {
 				const overlay = document.getElementById('loading-overlay');
-				const welcomeImg = document.getElementById('welcome-img');
-				const meetImg = document.getElementById('meet-img');
 				
 				if (overlay) {
 					overlay.style.opacity = '0';
 					setTimeout(() => {
 						overlay.style.display = 'none';
 						
-						// Hide welcome image and show meet image
-						welcomeImg.style.display = 'none';
-						meetImg.style.display = 'block';
+						// Don't change the welcome image to meet image here
+						// This will now happen after the VRM model is fully loaded and visible
 						
-						// Animate the meet image
-						setTimeout(() => {
-							meetImg.style.transition = 'opacity 0.5s, transform 0.8s';
-							meetImg.style.opacity = '1';
-							meetImg.style.transform = 'translateY(0)';
-							
-							// Wait for meet.png animation to complete before animating subreddits
-							setTimeout(() => {
-								// Get all subreddit items and animate them with staggered delays
-								const subredditItems = document.querySelectorAll('.subreddit-item');
-								subredditItems.forEach((item, index) => {
-									setTimeout(() => {
-										item.classList.add('animate-subreddit');
-									}, 100 * index); // Stagger by 100ms per item
-								});
-							}, 600); // Wait 600ms after meet.png starts animating
-							
-						}, 100);
 					}, 500);
 				}
 			}
@@ -1242,6 +1221,31 @@ ac				padding: 0; /* Removed padding to allow image to reach bottom edge */
 								requestAnimationFrame(animatePosition);
 							} else {
 								vrm.scene.position.y = 0;
+								
+								// NOW switch the welcome image to meet image AFTER the VRM is in place
+								const welcomeImg = document.getElementById('welcome-img');
+								const meetImg = document.getElementById('meet-img');
+								
+								welcomeImg.style.display = 'none';
+								meetImg.style.display = 'block';
+								
+								// Animate the meet image
+								setTimeout(() => {
+									meetImg.style.transition = 'opacity 0.5s, transform 0.8s';
+									meetImg.style.opacity = '1';
+									meetImg.style.transform = 'translateY(0)';
+									
+									// Wait for meet.png animation to complete before animating subreddits
+									setTimeout(() => {
+										// Get all subreddit items and animate them with staggered delays
+										const subredditItems = document.querySelectorAll('.subreddit-item');
+										subredditItems.forEach((item, index) => {
+											setTimeout(() => {
+												item.classList.add('animate-subreddit');
+											}, 100 * index); // Stagger by 100ms per item
+										});
+									}, 600); // Wait 600ms after meet.png starts animating
+								}, 100);
 							}
 						}
 						
